@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>김개발 | 개발자 포트폴리오</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Noto Sans KR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- 외부 CSS 파일 연결 -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- 헤더 및 네비게이션 -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-xl font-bold text-slate-900">김개발.dev</a>
+            <ul class="hidden md:flex space-x-6">
+                <li><a href="#about" class="hover:text-blue-600 transition-colors">소개</a></li>
+                <li><a href="#skills" class="hover:text-blue-600 transition-colors">기술</a></li>
+                <li><a href="#projects" class="hover:text-blue-600 transition-colors">프로젝트</a></li>
+                <li><a href="#contact" class="hover:text-blue-600 transition-colors">연락처</a></li>
+            </ul>
+            <a href="#contact" class="hidden md:block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-all">문의하기</a>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6">
+
+        <!-- Hero 섹션 -->
+        <section id="hero" class="text-center py-24 md:py-32">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+                <span class="block">안녕하세요, 문제를 해결하며</span>
+                <span class="block text-blue-600">성장하는 개발자 김개발입니다.</span>
+            </h1>
+            <p class="mt-6 text-lg text-slate-600 max-w-2xl mx-auto">
+                사용자 중심의 직관적인 웹 경험을 만드는 것을 좋아합니다. <br>새로운 기술을 배우고 적용하는 과정에서 즐거움을 느낍니다.
+            </p>
+            <div class="mt-8 flex justify-center gap-4">
+                <a href="#projects" class="bg-blue-600 text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-blue-700 transition-all">프로젝트 보기</a>
+                <a href="https://github.com/your-username" target="_blank" class="bg-white text-slate-700 px-8 py-3 rounded-md text-lg font-semibold border border-slate-300 hover:bg-slate-100 transition-all">GitHub</a>
+            </div>
+        </section>
+
+        <!-- 소개 섹션 -->
+        <section id="about" class="py-20 fade-in-section">
+            <h2 class="text-3xl font-bold text-center text-slate-900 mb-12">소개 (About Me)</h2>
+            <div class="flex flex-col md:flex-row items-center gap-12">
+                <div class="md:w-1/3">
+                    <img src="https://placehold.co/400x400/E2E8F0/334155?text=Profile" alt="프로필 이미지" class="rounded-full shadow-lg mx-auto">
+                </div>
+                <div class="md:w-2/3">
+                    <p class="text-slate-600 leading-relaxed mb-4">
+                        저는 3년차 프론트엔드 개발자입니다. JavaScript와 React를 주로 사용하여 인터랙티브하고 반응형인 웹 애플리케이션을 개발해왔습니다. 좋은 사용자 경험이 좋은 제품의 핵심이라고 믿으며, 항상 사용자의 입장에서 고민하며 개발합니다.
+                    </p>
+                    <p class="text-slate-600 leading-relaxed">
+                        팀원들과의 원활한 소통과 협업을 중요하게 생각하며, 코드 리뷰와 페어 프로그래밍을 통해 함께 성장하는 것을 즐깁니다. 현재는 TypeScript와 Next.js의 전문성을 높이는 데 집중하고 있습니다.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 기술 스택 섹션 -->
+        <section id="skills" class="py-20 bg-white rounded-xl shadow-md fade-in-section">
+            <h2 class="text-3xl font-bold text-center text-slate-900 mb-12">보유 기술 (Skills)</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 text-center">
+                <!-- 아이콘은 SVG로 직접 삽입하여 외부 파일 의존성을 없앱니다. -->
+                <div class="flex flex-col items-center gap-2">
+                    <svg class="w-16 h-16" fill="#F0DB4F" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0V0zm22.034 18.262l-2.263 2.262-3.502-3.501-3.501 3.5-2.263-2.262 3.501-3.501-3.506-3.506 2.262-2.262 3.506 3.505 3.501-3.5 2.263 2.262-3.501 3.501 3.505 3.506zM8.25 12.188l-2.24-2.24a3.102 3.102 0 1 0-4.387 4.386l2.24 2.24a3.102 3.102 0 1 0 4.387-4.386z"/></svg>
+                    <p class="font-semibold">JavaScript</p>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <svg class="w-16 h-16" fill="#61DAFB" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><ellipse rx="11" ry="4.2" transform="matrix(1 0 0 1 12 12)"/><ellipse rx="11" ry="4.2" transform="matrix(.5 .866 .866 -.5 12 12)"/><ellipse rx="11" ry="4.2" transform="matrix(.5 -.866 .866 .5 12 12)"/></svg>
+                    <p class="font-semibold">React</p>
+                </div>
+                 <div class="flex flex-col items-center gap-2">
+                    <svg class="w-16 h-16" fill="#007ACC" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M12.19 1.99l-9.39 1.87v14.41l9.39 3.73 9.39-3.73V3.86zm-7.65 3.1l6.27-1.25v14.4l-6.27-2.49zm14.28 10.65l-6.27 2.49V3.84l6.27 1.25z"/></svg>
+                    <p class="font-semibold">TypeScript</p>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <svg class="w-16 h-16" fill="#68A063" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M11.99 24C5.382 24 0 18.618 0 12S5.382 0 11.99 0C16.326 0 20.088 2.545 22.01 6.229l-3.522 2.033c-1.24-2.222-3.578-3.762-6.488-3.762-4.14 0-7.5 3.36-7.5 7.5s3.36 7.5 7.5 7.5c2.91 0 5.43-1.666 6.729-4.089l3.522 2.033C20.478 21.688 16.611 24 11.99 24z"/></svg>
+                    <p class="font-semibold">Node.js</p>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <svg class="w-16 h-16" fill="#000000" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M12 0L2 4v16l10 4 10-4V4zm6.188 17.152L12 19.5V12h6.188zM12 10.5V5.203l6.188 2.654V10.5zM5.812 6.848L12 4.5v5.25H5.812zM5.812 12H12v6.797L5.812 16.152z"/></svg>
+                    <p class="font-semibold">Next.js</p>
+                </div>
+                 <div class="flex flex-col items-center gap-2">
+                    <svg class="w-16 h-16" fill="#4285F4" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.99 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    <p class="font-semibold">Firebase</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 프로젝트 섹션 -->
+        <section id="projects" class="py-20 fade-in-section">
+            <h2 class="text-3xl font-bold text-center text-slate-900 mb-12">주요 프로젝트 (Projects)</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- 프로젝트 카드 1 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
+                    <img src="https://placehold.co/600x400/3B82F6/FFFFFF?text=Project+A" alt="프로젝트 1 이미지" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">실시간 채팅 애플리케이션</h3>
+                        <p class="text-slate-600 mb-4">React와 Firebase를 사용하여 구현한 실시간 채팅 웹 앱입니다. Google 계정으로 로그인할 수 있습니다.</p>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">React</span>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Firebase</span>
+                            <span class="bg-sky-100 text-sky-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tailwind CSS</span>
+                        </div>
+                        <div class="mt-6 flex gap-4">
+                            <a href="#" class="font-semibold text-blue-600 hover:text-blue-800">Live Demo →</a>
+                            <a href="#" class="font-semibold text-slate-600 hover:text-slate-800">GitHub →</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- 프로젝트 카드 2 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
+                    <img src="https://placehold.co/600x400/10B981/FFFFFF?text=Project+B" alt="프로젝트 2 이미지" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">개인 블로그 플랫폼</h3>
+                        <p class="text-slate-600 mb-4">Next.js와 Markdown을 이용해 만든 정적 블로그입니다. 빠른 로딩 속도와 SEO에 최적화되어 있습니다.</p>
+                         <div class="flex items-center gap-2 flex-wrap">
+                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Next.js</span>
+                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">TypeScript</span>
+                            <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">MDX</span>
+                        </div>
+                        <div class="mt-6 flex gap-4">
+                            <a href="#" class="font-semibold text-blue-600 hover:text-blue-800">Live Demo →</a>
+                            <a href="#" class="font-semibold text-slate-600 hover:text-slate-800">GitHub →</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- 프로젝트 카드 3 -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
+                    <img src="https://placehold.co/600x400/8B5CF6/FFFFFF?text=Project+C" alt="프로젝트 3 이미지" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">투두리스트 관리 앱</h3>
+                        <p class="text-slate-600 mb-4">Node.js(Express)와 MongoDB를 백엔드로 사용하고, 순수 JS로 프론트엔드를 구현한 CRUD 앱입니다.</p>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Node.js</span>
+                            <span class="bg-orange-100 text-orange-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Express</span>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">MongoDB</span>
+                        </div>
+                        <div class="mt-6 flex gap-4">
+                            <a href="#" class="font-semibold text-blue-600 hover:text-blue-800">Live Demo →</a>
+                            <a href="#" class="font-semibold text-slate-600 hover:text-slate-800">GitHub →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 연락처 섹션 -->
+        <section id="contact" class="py-20 text-center fade-in-section">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">함께 일하고 싶으신가요?</h2>
+            <p class="text-slate-600 max-w-xl mx-auto mb-8">
+                새로운 기회에 항상 열려있습니다. 아래 편한 방법으로 연락 주세요.
+            </p>
+            <a href="mailto:your-email@example.com" class="bg-blue-600 text-white px-10 py-4 rounded-md text-xl font-semibold hover:bg-blue-700 transition-all inline-block">
+                이메일 보내기
+            </a>
+            <div class="mt-10 flex justify-center space-x-6">
+                <a href="https://github.com/your-username" target="_blank" class="text-slate-500 hover:text-blue-600 transition-colors">
+                    <span class="sr-only">GitHub</span>
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.168 6.839 9.492.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.031-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.378.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.338 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.001 10.001 0 0022 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd" /></svg>
+                </a>
+                <a href="#" class="text-slate-500 hover:text-blue-600 transition-colors">
+                    <span class="sr-only">LinkedIn</span>
+                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-slate-800 text-slate-400 text-center py-6">
+        <p>&copy; <span id="year"></span> 김개발. All Rights Reserved.</p>
+    </footer>
+
+    <!-- 외부 JS 파일 연결 -->
+    <script src="script.js"></script>
+</body>
+</html>
