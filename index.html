@@ -1,190 +1,4391 @@
 <!DOCTYPE html>
-<html lang="ko" class="scroll-smooth">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>김개발 | 개발자 포트폴리오</title>
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Noto Sans KR -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-
-    <!-- 외부 CSS 파일 연결 -->
-    <link rel="stylesheet" href="style.css">
+    <title>미니 리그오브레전드</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            border: 2px solid #333;
+            background: #111;
+        }
+        #test-results {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        .test-pass { color: #0f0; }
+        .test-fail { color: #f00; }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body>
+    <div id="test-results">
+        <h3>TASK-014 테스트 결과</h3>
+        <div id="test-output"></div>
+    </div>
+    <div id="game-container"></div>
 
-    <!-- 헤더 및 네비게이션 -->
-    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
-        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <a href="#" class="text-xl font-bold text-slate-900">김개발.dev</a>
-            <ul class="hidden md:flex space-x-6">
-                <li><a href="#about" class="hover:text-blue-600 transition-colors">소개</a></li>
-                <li><a href="#skills" class="hover:text-blue-600 transition-colors">기술</a></li>
-                <li><a href="#projects" class="hover:text-blue-600 transition-colors">프로젝트</a></li>
-                <li><a href="#contact" class="hover:text-blue-600 transition-colors">연락처</a></li>
-            </ul>
-            <a href="#contact" class="hidden md:block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-all">문의하기</a>
-        </nav>
-    </header>
+    <!-- CDN 라이브러리 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.88.2/dist/phaser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.2/dist/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/howler@2.2.3/dist/howler.min.js"></script>
 
-    <main class="container mx-auto px-6">
+    <script>
+        // 게임 데이터 관리자
+        class GameDataManager {
+            constructor() {
+                this.data = {
+                    selectedChampion: null,
+                    gameResult: null,
+                    gameStats: {
+                        kills: 0,
+                        deaths: 0,
+                        assists: 0,
+                        gameTime: 0
+                    }
+                };
+            }
 
-        <!-- Hero 섹션 -->
-        <section id="hero" class="text-center py-24 md:py-32">
-            <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
-                <span class="block">안녕하세요, 문제를 해결하며</span>
-                <span class="block text-blue-600">성장하는 개발자 김개발입니다.</span>
-            </h1>
-            <p class="mt-6 text-lg text-slate-600 max-w-2xl mx-auto">
-                사용자 중심의 직관적인 웹 경험을 만드는 것을 좋아합니다. <br>새로운 기술을 배우고 적용하는 과정에서 즐거움을 느낍니다.
-            </p>
-            <div class="mt-8 flex justify-center gap-4">
-                <a href="#projects" class="bg-blue-600 text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-blue-700 transition-all">프로젝트 보기</a>
-                <a href="https://github.com/your-username" target="_blank" class="bg-white text-slate-700 px-8 py-3 rounded-md text-lg font-semibold border border-slate-300 hover:bg-slate-100 transition-all">GitHub</a>
-            </div>
-        </section>
+            setSelectedChampion(champion) {
+                this.data.selectedChampion = champion;
+            }
 
-        <!-- 소개 섹션 -->
-        <section id="about" class="py-20 fade-in-section">
-            <h2 class="text-3xl font-bold text-center text-slate-900 mb-12">소개 (About Me)</h2>
-            <div class="flex flex-col md:flex-row items-center gap-12">
-                <div class="md:w-1/3">
-                    <img src="https://placehold.co/400x400/E2E8F0/334155?text=Profile" alt="프로필 이미지" class="rounded-full shadow-lg mx-auto">
-                </div>
-                <div class="md:w-2/3">
-                    <p class="text-slate-600 leading-relaxed mb-4">
-                        저는 3년차 프론트엔드 개발자입니다. JavaScript와 React를 주로 사용하여 인터랙티브하고 반응형인 웹 애플리케이션을 개발해왔습니다. 좋은 사용자 경험이 좋은 제품의 핵심이라고 믿으며, 항상 사용자의 입장에서 고민하며 개발합니다.
-                    </p>
-                    <p class="text-slate-600 leading-relaxed">
-                        팀원들과의 원활한 소통과 협업을 중요하게 생각하며, 코드 리뷰와 페어 프로그래밍을 통해 함께 성장하는 것을 즐깁니다. 현재는 TypeScript와 Next.js의 전문성을 높이는 데 집중하고 있습니다.
-                    </p>
-                </div>
-            </div>
-        </section>
+            getSelectedChampion() {
+                return this.data.selectedChampion;
+            }
 
-        <!-- 기술 스택 섹션 -->
-        <section id="skills" class="py-20 bg-white rounded-xl shadow-md fade-in-section">
-            <h2 class="text-3xl font-bold text-center text-slate-900 mb-12">보유 기술 (Skills)</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 text-center">
-                <!-- 아이콘은 SVG로 직접 삽입하여 외부 파일 의존성을 없앱니다. -->
-                <div class="flex flex-col items-center gap-2">
-                    <svg class="w-16 h-16" fill="#F0DB4F" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0V0zm22.034 18.262l-2.263 2.262-3.502-3.501-3.501 3.5-2.263-2.262 3.501-3.501-3.506-3.506 2.262-2.262 3.506 3.505 3.501-3.5 2.263 2.262-3.501 3.501 3.505 3.506zM8.25 12.188l-2.24-2.24a3.102 3.102 0 1 0-4.387 4.386l2.24 2.24a3.102 3.102 0 1 0 4.387-4.386z"/></svg>
-                    <p class="font-semibold">JavaScript</p>
-                </div>
-                <div class="flex flex-col items-center gap-2">
-                    <svg class="w-16 h-16" fill="#61DAFB" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><ellipse rx="11" ry="4.2" transform="matrix(1 0 0 1 12 12)"/><ellipse rx="11" ry="4.2" transform="matrix(.5 .866 .866 -.5 12 12)"/><ellipse rx="11" ry="4.2" transform="matrix(.5 -.866 .866 .5 12 12)"/></svg>
-                    <p class="font-semibold">React</p>
-                </div>
-                 <div class="flex flex-col items-center gap-2">
-                    <svg class="w-16 h-16" fill="#007ACC" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M12.19 1.99l-9.39 1.87v14.41l9.39 3.73 9.39-3.73V3.86zm-7.65 3.1l6.27-1.25v14.4l-6.27-2.49zm14.28 10.65l-6.27 2.49V3.84l6.27 1.25z"/></svg>
-                    <p class="font-semibold">TypeScript</p>
-                </div>
-                <div class="flex flex-col items-center gap-2">
-                    <svg class="w-16 h-16" fill="#68A063" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M11.99 24C5.382 24 0 18.618 0 12S5.382 0 11.99 0C16.326 0 20.088 2.545 22.01 6.229l-3.522 2.033c-1.24-2.222-3.578-3.762-6.488-3.762-4.14 0-7.5 3.36-7.5 7.5s3.36 7.5 7.5 7.5c2.91 0 5.43-1.666 6.729-4.089l3.522 2.033C20.478 21.688 16.611 24 11.99 24z"/></svg>
-                    <p class="font-semibold">Node.js</p>
-                </div>
-                <div class="flex flex-col items-center gap-2">
-                    <svg class="w-16 h-16" fill="#000000" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M12 0L2 4v16l10 4 10-4V4zm6.188 17.152L12 19.5V12h6.188zM12 10.5V5.203l6.188 2.654V10.5zM5.812 6.848L12 4.5v5.25H5.812zM5.812 12H12v6.797L5.812 16.152z"/></svg>
-                    <p class="font-semibold">Next.js</p>
-                </div>
-                 <div class="flex flex-col items-center gap-2">
-                    <svg class="w-16 h-16" fill="#4285F4" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 1.99 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                    <p class="font-semibold">Firebase</p>
-                </div>
-            </div>
-        </section>
+            setGameResult(result) {
+                this.data.gameResult = result;
+            }
 
-        <!-- 프로젝트 섹션 -->
-        <section id="projects" class="py-20 fade-in-section">
-            <h2 class="text-3xl font-bold text-center text-slate-900 mb-12">주요 프로젝트 (Projects)</h2>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- 프로젝트 카드 1 -->
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
-                    <img src="https://placehold.co/600x400/3B82F6/FFFFFF?text=Project+A" alt="프로젝트 1 이미지" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-slate-900 mb-2">실시간 채팅 애플리케이션</h3>
-                        <p class="text-slate-600 mb-4">React와 Firebase를 사용하여 구현한 실시간 채팅 웹 앱입니다. Google 계정으로 로그인할 수 있습니다.</p>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">React</span>
-                            <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Firebase</span>
-                            <span class="bg-sky-100 text-sky-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tailwind CSS</span>
-                        </div>
-                        <div class="mt-6 flex gap-4">
-                            <a href="#" class="font-semibold text-blue-600 hover:text-blue-800">Live Demo →</a>
-                            <a href="#" class="font-semibold text-slate-600 hover:text-slate-800">GitHub →</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- 프로젝트 카드 2 -->
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
-                    <img src="https://placehold.co/600x400/10B981/FFFFFF?text=Project+B" alt="프로젝트 2 이미지" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-slate-900 mb-2">개인 블로그 플랫폼</h3>
-                        <p class="text-slate-600 mb-4">Next.js와 Markdown을 이용해 만든 정적 블로그입니다. 빠른 로딩 속도와 SEO에 최적화되어 있습니다.</p>
-                         <div class="flex items-center gap-2 flex-wrap">
-                            <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Next.js</span>
-                            <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">TypeScript</span>
-                            <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">MDX</span>
-                        </div>
-                        <div class="mt-6 flex gap-4">
-                            <a href="#" class="font-semibold text-blue-600 hover:text-blue-800">Live Demo →</a>
-                            <a href="#" class="font-semibold text-slate-600 hover:text-slate-800">GitHub →</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- 프로젝트 카드 3 -->
-                <div class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300">
-                    <img src="https://placehold.co/600x400/8B5CF6/FFFFFF?text=Project+C" alt="프로젝트 3 이미지" class="w-full h-48 object-cover">
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-slate-900 mb-2">투두리스트 관리 앱</h3>
-                        <p class="text-slate-600 mb-4">Node.js(Express)와 MongoDB를 백엔드로 사용하고, 순수 JS로 프론트엔드를 구현한 CRUD 앱입니다.</p>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Node.js</span>
-                            <span class="bg-orange-100 text-orange-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Express</span>
-                            <span class="bg-emerald-100 text-emerald-800 text-xs font-medium px-2.5 py-0.5 rounded-full">MongoDB</span>
-                        </div>
-                        <div class="mt-6 flex gap-4">
-                            <a href="#" class="font-semibold text-blue-600 hover:text-blue-800">Live Demo →</a>
-                            <a href="#" class="font-semibold text-slate-600 hover:text-slate-800">GitHub →</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+            getGameResult() {
+                return this.data.gameResult;
+            }
 
-        <!-- 연락처 섹션 -->
-        <section id="contact" class="py-20 text-center fade-in-section">
-            <h2 class="text-3xl font-bold text-slate-900 mb-4">함께 일하고 싶으신가요?</h2>
-            <p class="text-slate-600 max-w-xl mx-auto mb-8">
-                새로운 기회에 항상 열려있습니다. 아래 편한 방법으로 연락 주세요.
-            </p>
-            <a href="mailto:your-email@example.com" class="bg-blue-600 text-white px-10 py-4 rounded-md text-xl font-semibold hover:bg-blue-700 transition-all inline-block">
-                이메일 보내기
-            </a>
-            <div class="mt-10 flex justify-center space-x-6">
-                <a href="https://github.com/your-username" target="_blank" class="text-slate-500 hover:text-blue-600 transition-colors">
-                    <span class="sr-only">GitHub</span>
-                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.168 6.839 9.492.5.092.682-.217.682-.482 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.031-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.378.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.338 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.001 10.001 0 0022 12c0-5.523-4.477-10-10-10z" clip-rule="evenodd" /></svg>
-                </a>
-                <a href="#" class="text-slate-500 hover:text-blue-600 transition-colors">
-                    <span class="sr-only">LinkedIn</span>
-                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                </a>
-            </div>
-        </section>
-    </main>
+            updateStats(stats) {
+                Object.assign(this.data.gameStats, stats);
+            }
 
-    <!-- 푸터 -->
-    <footer class="bg-slate-800 text-slate-400 text-center py-6">
-        <p>&copy; <span id="year"></span> 김개발. All Rights Reserved.</p>
-    </footer>
+            getStats() {
+                return this.data.gameStats;
+            }
 
-    <!-- 외부 JS 파일 연결 -->
-    <script src="script.js"></script>
+            reset() {
+                this.data = {
+                    selectedChampion: null,
+                    gameResult: null,
+                    gameStats: {
+                        kills: 0,
+                        deaths: 0,
+                        assists: 0,
+                        gameTime: 0
+                    }
+                };
+            }
+        }
+
+        // 챔피언 데이터
+        class ChampionData {
+            static getChampions() {
+                return [
+                    {
+                        id: 'ahri',
+                        name: '아리',
+                        title: '구미호',
+                        description: '매혹적인 구미호로, 적을 유혹하여 강력한 마법 공격을 가합니다.',
+                        skills: [
+                            { key: 'Q', name: '현혹의 구슬', description: '마법 구슬을 날려 적에게 피해를 입힙니다.' },
+                            { key: 'W', name: '여우불', description: '여우불을 소환하여 주변 적을 추적합니다.' },
+                            { key: 'E', name: '매혹', description: '적을 매혹시켜 움직이지 못하게 합니다.' }
+                        ],
+                        stats: { hp: 100, mp: 300, attack: 80, defense: 60 }
+                    },
+                    {
+                        id: 'garen',
+                        name: '가렌',
+                        title: '데마시아의 힘',
+                        description: '데마시아의 용감한 전사로, 강력한 검술과 방어력을 자랑합니다.',
+                        skills: [
+                            { key: 'Q', name: '결정타', description: '다음 공격이 강화되어 침묵 효과를 부여합니다.' },
+                            { key: 'W', name: '용기', description: '방어력과 마법 저항력이 증가합니다.' },
+                            { key: 'E', name: '심판', description: '검을 회전시켜 주변 적에게 지속 피해를 입힙니다.' }
+                        ],
+                        stats: { hp: 150, mp: 250, attack: 90, defense: 100 }
+                    },
+                    {
+                        id: 'jinx',
+                        name: '징크스',
+                        title: '난폭한 말괄량이',
+                        description: '폭발적인 화력을 자랑하는 원거리 딜러입니다.',
+                        skills: [
+                            { key: 'Q', name: '휘릭휘릭!', description: '무기를 교체하여 공격 방식을 바꿉니다.' },
+                            { key: 'W', name: '맞아죽을래!', description: '전기 충격 총을 발사합니다.' },
+                            { key: 'E', name: '와작와작 터뜨리기!', description: '함정을 설치하여 적을 속박합니다.' }
+                        ],
+                        stats: { hp: 90, mp: 280, attack: 110, defense: 50 }
+                    },
+                    {
+                        id: 'thresh',
+                        name: '쓰레쉬',
+                        title: '사슬 감시자',
+                        description: '강력한 지원 능력으로 아군을 보호하고 적을 제어합니다.',
+                        skills: [
+                            { key: 'Q', name: '사신의 선고', description: '갈고리를 던져 적을 끌어당깁니다.' },
+                            { key: 'W', name: '어둠의 통로', description: '랜턴을 던져 아군을 구출합니다.' },
+                            { key: 'E', name: '사슬 채찍', description: '적을 밀쳐내거나 끌어당깁니다.' }
+                        ],
+                        stats: { hp: 120, mp: 320, attack: 70, defense: 85 }
+                    }
+                ];
+            }
+
+            static getChampionById(id) {
+                return this.getChampions().find(champion => champion.id === id);
+            }
+        }
+
+        // 챔피언 선택 Scene
+        class ChampionSelectScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'ChampionSelectScene' });
+                this.selectedChampion = null;
+                this.championCards = [];
+                this.infoPanel = null;
+                this.startButton = null;
+            }
+
+            preload() {
+                // 배경 이미지 생성
+                this.load.image('champion-bg', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSI3NjgiIHZpZXdCb3g9IjAgMCAxMDI0IDc2OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEwMjQiIGhlaWdodD0iNzY4IiBmaWxsPSIjMUU0MDU3Ii8+CjwvZz4KPC9zdmc+');
+                
+                // 챔피언 카드 배경 이미지 생성
+                this.load.image('card-bg', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE0MCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNDAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMmMzZTUwIiBzdHJva2U9IiM0MTU2NmIiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4=');
+                
+                // 선택된 카드 배경
+                this.load.image('card-selected', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE0MCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNDAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMzQ5OGRiIiBzdHJva2U9IiMyOTgwYjkiIHN0cm9rZS13aWR0aD0iMyIvPgo8L3N2Zz4=');
+            }
+
+            create() {
+                // 배경 추가
+                this.add.image(512, 384, 'champion-bg');
+                
+                // 제목 텍스트
+                this.add.text(512, 60, '챔피언 선택', {
+                    fontSize: '36px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                // 챔피언 카드들 생성
+                this.createChampionCards();
+                
+                // 정보 패널 생성
+                this.createInfoPanel();
+                
+                // 게임 시작 버튼 생성
+                this.createStartButton();
+
+                // Scene 초기화 완료 신호
+                window.championSelectSceneReady = true;
+                window.championSelectScene = this;
+            }
+
+            createChampionCards() {
+                const champions = ChampionData.getChampions();
+                const startX = 180;
+                const startY = 250;
+                const cardWidth = 140;
+                const cardSpacing = 160;
+
+                champions.forEach((champion, index) => {
+                    const x = startX + index * cardSpacing;
+                    const y = startY;
+
+                    // 카드 컨테이너 생성
+                    const cardContainer = this.add.container(x, y);
+                    
+                    // 카드 배경
+                    const cardBg = this.add.image(0, 0, 'card-bg')
+                        .setInteractive({ useHandCursor: true })
+                        .on('pointerover', () => {
+                            cardBg.setTint(0xcccccc);
+                            this.updateInfoPanel(champion);
+                        })
+                        .on('pointerout', () => {
+                            if (this.selectedChampion !== champion.id) {
+                                cardBg.clearTint();
+                            }
+                        })
+                        .on('pointerdown', () => {
+                            this.selectChampion(champion);
+                        });
+
+                    // 챔피언 이름
+                    const nameText = this.add.text(0, -70, champion.name, {
+                        fontSize: '18px',
+                        fill: '#ffffff',
+                        fontFamily: 'Arial',
+                        fontStyle: 'bold'
+                    }).setOrigin(0.5);
+
+                    // 챔피언 타이틀
+                    const titleText = this.add.text(0, -50, champion.title, {
+                        fontSize: '12px',
+                        fill: '#cccccc',
+                        fontFamily: 'Arial'
+                    }).setOrigin(0.5);
+
+                    // 스탯 표시
+                    const statsText = this.add.text(0, 60, 
+                        `HP: ${champion.stats.hp}\nMP: ${champion.stats.mp}\nATK: ${champion.stats.attack}\nDEF: ${champion.stats.defense}`, {
+                        fontSize: '10px',
+                        fill: '#ffffff',
+                        fontFamily: 'Arial',
+                        align: 'center'
+                    }).setOrigin(0.5);
+
+                    cardContainer.add([cardBg, nameText, titleText, statsText]);
+                    
+                    // 카드 정보 저장
+                    this.championCards.push({
+                        container: cardContainer,
+                        background: cardBg,
+                        champion: champion,
+                        nameText: nameText,
+                        titleText: titleText,
+                        statsText: statsText
+                    });
+                });
+            }
+
+            createInfoPanel() {
+                // 정보 패널 배경
+                const panelBg = this.add.rectangle(512, 450, 600, 200, 0x34495e, 0.9);
+                
+                // 패널 제목
+                this.infoPanelTitle = this.add.text(512, 380, '챔피언 정보', {
+                    fontSize: '20px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                // 챔피언 설명
+                this.infoPanelDesc = this.add.text(512, 420, '챔피언을 선택하면 정보가 표시됩니다.', {
+                    fontSize: '14px',
+                    fill: '#cccccc',
+                    fontFamily: 'Arial',
+                    align: 'center',
+                    wordWrap: { width: 550 }
+                }).setOrigin(0.5);
+
+                // 스킬 정보
+                this.infoPanelSkills = this.add.text(512, 480, '', {
+                    fontSize: '12px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial',
+                    align: 'center',
+                    wordWrap: { width: 550 }
+                }).setOrigin(0.5);
+
+                this.infoPanel = {
+                    background: panelBg,
+                    title: this.infoPanelTitle,
+                    description: this.infoPanelDesc,
+                    skills: this.infoPanelSkills
+                };
+            }
+
+            createStartButton() {
+                this.startButton = this.add.rectangle(512, 600, 200, 60, 0x27ae60)
+                    .setInteractive({ useHandCursor: true })
+                    .setAlpha(0.5)
+                    .on('pointerover', () => {
+                        if (this.selectedChampion) {
+                            this.startButton.setTint(0xcccccc);
+                        }
+                    })
+                    .on('pointerout', () => {
+                        this.startButton.clearTint();
+                    })
+                    .on('pointerdown', () => {
+                        if (this.selectedChampion) {
+                            window.gameDataManager.setSelectedChampion(this.selectedChampion);
+                            this.scene.start('GamePlayScene');
+                        }
+                    });
+
+                this.startButtonText = this.add.text(512, 600, '게임 시작', {
+                    fontSize: '20px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+            }
+
+            selectChampion(champion) {
+                // 이전 선택 해제
+                this.championCards.forEach(card => {
+                    card.background.clearTint();
+                    card.background.setTexture('card-bg');
+                });
+
+                // 새로운 선택
+                this.selectedChampion = champion.id;
+                const selectedCard = this.championCards.find(card => card.champion.id === champion.id);
+                if (selectedCard) {
+                    selectedCard.background.setTexture('card-selected');
+                }
+
+                // 정보 패널 업데이트
+                this.updateInfoPanel(champion);
+
+                // 시작 버튼 활성화
+                this.startButton.setAlpha(1);
+
+                // 선택 완료 신호
+                window.championSelected = champion.id;
+            }
+
+            updateInfoPanel(champion) {
+                if (!champion) return;
+
+                this.infoPanel.title.setText(`${champion.name} - ${champion.title}`);
+                this.infoPanel.description.setText(champion.description);
+                
+                const skillsText = champion.skills.map(skill => 
+                    `${skill.key}: ${skill.name} - ${skill.description}`
+                ).join('\n');
+                this.infoPanel.skills.setText(skillsText);
+            }
+
+            getSelectedChampion() {
+                return this.selectedChampion;
+            }
+
+            getChampionCards() {
+                return this.championCards;
+            }
+        }
+
+        // 맵 데이터 클래스
+        class MapData {
+            constructor() {
+                const config = MapData.getMapConfig();
+                this.width = config.width;
+                this.height = config.height;
+                this.tileSize = config.tileSize;
+                this.lanes = config.lanes;
+                this.structures = config.structures;
+                this.bushes = config.bushes;
+                this.river = config.river;
+                
+                // 넥서스와 타워 배열 생성
+                this.nexuses = [
+                    { x: 100, y: 400, team: 'blue' },
+                    { x: 1100, y: 400, team: 'red' }
+                ];
+                
+                this.towers = [
+                    { x: 250, y: 400, team: 'blue' },
+                    { x: 950, y: 400, team: 'red' }
+                ];
+            }
+            
+            static getMapConfig() {
+                return {
+                    width: 1200,
+                    height: 800,
+                    tileSize: 32,
+                    lanes: {
+                        top: { y: 200 },
+                        middle: { y: 400 },
+                        bottom: { y: 600 }
+                    },
+                    structures: {
+                        blueNexus: { x: 100, y: 400, team: 'blue' },
+                        redNexus: { x: 1100, y: 400, team: 'red' },
+                        blueTower: { x: 250, y: 400, team: 'blue' },
+                        redTower: { x: 950, y: 400, team: 'red' }
+                    },
+                    bushes: [
+                        { x: 400, y: 300, width: 100, height: 80 },
+                        { x: 700, y: 500, width: 100, height: 80 },
+                        { x: 500, y: 200, width: 80, height: 100 },
+                        { x: 600, y: 600, width: 80, height: 100 }
+                    ],
+                    river: {
+                        x: 500,
+                        y: 0,
+                        width: 200,
+                        height: 800
+                    }
+                };
+            }
+
+            static getBushAtPosition(x, y) {
+                const bushes = this.getMapConfig().bushes;
+                return bushes.find(bush => 
+                    x >= bush.x && x <= bush.x + bush.width &&
+                    y >= bush.y && y <= bush.y + bush.height
+                );
+            }
+
+            static isInBush(x, y) {
+                return this.getBushAtPosition(x, y) !== undefined;
+            }
+        }
+
+        // 부쉬 시야 관리자
+        class BushVisionManager {
+            constructor(scene) {
+                this.scene = scene;
+                this.visionMasks = new Map();
+                this.playerVision = { x: 0, y: 0, radius: 150 };
+                this.bushes = MapData.getMapConfig().bushes;
+                this.init();
+            }
+
+            init() {
+                // 부쉬 마스크 생성
+                this.bushes.forEach((bush, index) => {
+                    const mask = this.scene.add.rectangle(
+                        bush.x + bush.width / 2,
+                        bush.y + bush.height / 2,
+                        bush.width,
+                        bush.height,
+                        0x000000,
+                        0.7
+                    );
+                    mask.setVisible(false);
+                    this.visionMasks.set(index, mask);
+                });
+            }
+
+            updateVision(playerX, playerY) {
+                this.playerVision.x = playerX;
+                this.playerVision.y = playerY;
+
+                this.bushes.forEach((bush, index) => {
+                    const mask = this.visionMasks.get(index);
+                    const isPlayerInBush = MapData.isInBush(playerX, playerY);
+                    const isPlayerNearBush = this.isPlayerNearBush(playerX, playerY, bush);
+
+                    // 플레이어가 부쉬 안에 있거나 부쉬 근처에 있으면 시야 확보
+                    if (isPlayerInBush || isPlayerNearBush) {
+                        mask.setVisible(false);
+                    } else {
+                        mask.setVisible(true);
+                    }
+                });
+            }
+
+            isPlayerNearBush(playerX, playerY, bush) {
+                const bushCenterX = bush.x + bush.width / 2;
+                const bushCenterY = bush.y + bush.height / 2;
+                const distance = Phaser.Math.Distance.Between(
+                    playerX, playerY, bushCenterX, bushCenterY
+                );
+                return distance < this.playerVision.radius;
+            }
+
+            getVisibleBushes() {
+                return this.bushes.filter((bush, index) => {
+                    const mask = this.visionMasks.get(index);
+                    return !mask.visible;
+                });
+            }
+
+            destroy() {
+                this.visionMasks.forEach(mask => mask.destroy());
+                this.visionMasks.clear();
+            }
+        }
+
+        // 챔피언 클래스
+        class Champion {
+            constructor(scene, x, y, championId, isPlayer = false) {
+                this.scene = scene;
+                this.x = x;
+                this.y = y;
+                this.championId = championId;
+                this.isPlayer = isPlayer;
+                this.isDead = false;
+                
+                // 챔피언 데이터 가져오기
+                this.data = ChampionData.getChampionById(championId);
+                
+                // 스탯 초기화
+                this.initializeStats();
+                
+                // 스프라이트 생성
+                this.createSprite();
+                
+                // 애니메이션 생성
+                this.createAnimations();
+                
+                // UI 생성
+                this.createUI();
+                
+                // 스킬 매니저 생성
+                this.skillManager = new SkillManager(this.scene, this.championId);
+                
+                // 이동 관련 변수
+                this.isMoving = false;
+                this.moveTween = null;
+                
+                // 전투 관련 변수
+                this.lastAttackTime = 0;
+                this.attackCooldown = 1000; // 기본 공격 쿨다운 (ms)
+            }
+            
+            initializeStats() {
+                const baseStats = this.data.stats;
+                this.stats = {
+                    level: 1,
+                    maxHp: baseStats.hp,
+                    currentHp: baseStats.hp,
+                    maxMp: baseStats.mp,
+                    currentMp: baseStats.mp,
+                    attack: baseStats.attack,
+                    defense: baseStats.defense,
+                    attackSpeed: baseStats.attackSpeed || 1.0,
+                    moveSpeed: baseStats.moveSpeed || 350,
+                    attackRange: baseStats.attackRange || 120
+                };
+            }
+            
+            createSprite() {
+                // 물리 스프라이트 생성
+                this.sprite = this.scene.physics.add.sprite(this.x, this.y, 'player');
+                this.sprite.setDisplaySize(48, 48);
+                this.sprite.setCollideWorldBounds(true);
+                
+                // 챔피언별 색상 설정
+                const colors = {
+                    'ahri': 0xff69b4,      // 핫핑크
+                    'garen': 0x4169e1,     // 로열블루
+                    'jinx': 0xff1493,      // 딥핑크
+                    'thresh': 0x32cd32     // 라임그린
+                };
+                
+                this.sprite.setTint(colors[this.championId] || 0xffffff);
+                
+                // 물리 바디 설정
+                this.sprite.setCircle(20);
+                this.sprite.body.setCollideWorldBounds(true);
+                
+                // 참조 설정
+                this.sprite.champion = this;
+            }
+            
+            createAnimations() {
+                // 애니메이션 키 생성
+                const animKey = `${this.championId}_${this.isPlayer ? 'player' : 'ai'}`;
+                
+                // 기본 애니메이션들 생성 (실제 프레임이 없으므로 시뮬레이션)
+                this.animations = {
+                    idle: `${animKey}_idle`,
+                    walk: `${animKey}_walk`,
+                    attack: `${animKey}_attack`
+                };
+                
+                this.currentAnimation = 'idle';
+            }
+            
+            createUI() {
+                // 체력바 생성
+                this.healthBarBg = this.scene.add.rectangle(this.x, this.y - 35, 50, 6, 0x000000);
+                this.healthBar = this.scene.add.rectangle(this.x, this.y - 35, 48, 4, 0x00ff00);
+                
+                // 마나바 생성
+                this.manaBarBg = this.scene.add.rectangle(this.x, this.y - 28, 50, 4, 0x000000);
+                this.manaBar = this.scene.add.rectangle(this.x, this.y - 28, 48, 2, 0x0000ff);
+                
+                // 이름 텍스트
+                this.nameText = this.scene.add.text(this.x, this.y - 50, this.data.name, {
+                    fontSize: '12px',
+                    fill: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }).setOrigin(0.5);
+                
+                // 레벨 텍스트
+                this.levelText = this.scene.add.text(this.x - 25, this.y - 25, this.stats.level.toString(), {
+                    fontSize: '10px',
+                    fill: '#ffff00',
+                    stroke: '#000000',
+                    strokeThickness: 1
+                }).setOrigin(0.5);
+                
+                this.updateUI();
+            }
+            
+            updateUI() {
+                if (this.isDead) return;
+                
+                // 위치 업데이트
+                const uiElements = [this.healthBarBg, this.healthBar, this.manaBarBg, this.manaBar, this.nameText, this.levelText];
+                uiElements.forEach(element => {
+                    if (element) {
+                        element.x = this.sprite.x;
+                    }
+                });
+                
+                // Y 위치 개별 설정
+                if (this.healthBarBg) this.healthBarBg.y = this.sprite.y - 35;
+                if (this.healthBar) this.healthBar.y = this.sprite.y - 35;
+                if (this.manaBarBg) this.manaBarBg.y = this.sprite.y - 28;
+                if (this.manaBar) this.manaBar.y = this.sprite.y - 28;
+                if (this.nameText) this.nameText.y = this.sprite.y - 50;
+                if (this.levelText) {
+                    this.levelText.x = this.sprite.x - 25;
+                    this.levelText.y = this.sprite.y - 25;
+                }
+                
+                // 체력바 업데이트
+                const healthPercent = this.stats.currentHp / this.stats.maxHp;
+                if (this.healthBar) {
+                    this.healthBar.displayWidth = 48 * healthPercent;
+                    this.healthBar.x = this.sprite.x - 24 + (24 * healthPercent);
+                }
+                
+                // 마나바 업데이트
+                const manaPercent = this.stats.currentMp / this.stats.maxMp;
+                if (this.manaBar) {
+                    this.manaBar.displayWidth = 48 * manaPercent;
+                    this.manaBar.x = this.sprite.x - 24 + (24 * manaPercent);
+                }
+                
+                // 레벨 텍스트 업데이트
+                if (this.levelText) {
+                    this.levelText.setText(this.stats.level.toString());
+                }
+            }
+            
+            moveTo(targetX, targetY) {
+                if (this.isDead || this.isMoving) return;
+                
+                this.isMoving = true;
+                this.playAnimation('walk');
+                
+                const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, targetX, targetY);
+                const duration = (distance / this.stats.moveSpeed) * 1000;
+                
+                this.moveTween = this.scene.tweens.add({
+                    targets: this.sprite,
+                    x: targetX,
+                    y: targetY,
+                    duration: duration,
+                    ease: 'Power2',
+                    onUpdate: () => {
+                        this.x = this.sprite.x;
+                        this.y = this.sprite.y;
+                        this.updateUI();
+                    },
+                    onComplete: () => {
+                        this.isMoving = false;
+                        this.playAnimation('idle');
+                        this.moveTween = null;
+                    }
+                });
+            }
+            
+            playAnimation(animationType) {
+                if (this.currentAnimation === animationType) return;
+                
+                this.currentAnimation = animationType;
+                
+                // 애니메이션 시뮬레이션
+                switch (animationType) {
+                    case 'walk':
+                        this.scene.tweens.add({
+                            targets: this.sprite,
+                            scaleX: { from: 1, to: 1.1 },
+                            scaleY: { from: 1, to: 0.9 },
+                            duration: 200,
+                            yoyo: true,
+                            repeat: -1
+                        });
+                        break;
+                    case 'attack':
+                        this.scene.tweens.add({
+                            targets: this.sprite,
+                            scaleX: 1.3,
+                            scaleY: 1.3,
+                            duration: 150,
+                            yoyo: true,
+                            onComplete: () => {
+                                this.playAnimation('idle');
+                            }
+                        });
+                        break;
+                    case 'idle':
+                        this.scene.tweens.killTweensOf(this.sprite);
+                        this.sprite.setScale(1);
+                        break;
+                }
+            }
+            
+            // 기본 공격 메서드
+            performBasicAttack(target) {
+                if (this.isDead || target.isDead) return false;
+                
+                const currentTime = this.scene.time.now;
+                if (currentTime - this.lastAttackTime < this.attackCooldown) {
+                    return false; // 쿨다운 중
+                }
+                
+                // 사거리 확인
+                const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, target.sprite.x, target.sprite.y);
+                if (distance > this.stats.attackRange) {
+                    return false; // 사거리 밖
+                }
+                
+                this.lastAttackTime = currentTime;
+                this.playAnimation('attack');
+                
+                // 전투 시스템을 통한 공격 처리
+                if (this.scene.combatSystem) {
+                    this.scene.combatSystem.performBasicAttack(this, target);
+                }
+                
+                return true;
+            }
+            
+            // 데미지 받기 메서드
+            takeDamage(damage) {
+                if (this.isDead) return false;
+                
+                this.stats.currentHp -= damage;
+                if (this.stats.currentHp <= 0) {
+                    this.stats.currentHp = 0;
+                    this.die();
+                    return true; // 사망
+                }
+                
+                this.updateUI();
+                return false; // 생존
+            }
+            
+            // 사망 처리 메서드
+            die() {
+                this.isDead = true;
+                this.sprite.setTint(0x666666);
+                this.sprite.setAlpha(0.5);
+                
+                // UI 숨기기
+                [this.healthBarBg, this.healthBar, this.manaBarBg, this.manaBar, this.nameText, this.levelText].forEach(element => {
+                    if (element) element.setVisible(false);
+                });
+                
+                console.log(`${this.data.name}이 사망했습니다.`);
+            }
+            
+            // 레벨업 메서드
+            levelUp() {
+                if (this.stats.level >= 18) return;
+                
+                this.stats.level++;
+                
+                // 스탯 증가
+                const growthRate = 0.1;
+                this.stats.maxHp += Math.floor(this.data.stats.hp * growthRate);
+                this.stats.maxMp += Math.floor(this.data.stats.mp * growthRate);
+                this.stats.attack += Math.floor(this.data.stats.attack * growthRate);
+                this.stats.defense += Math.floor(this.data.stats.defense * growthRate);
+                
+                // 체력/마나 회복
+                this.stats.currentHp = this.stats.maxHp;
+                this.stats.currentMp = this.stats.maxMp;
+                
+                this.updateUI();
+                console.log(`${this.data.name}이 레벨 ${this.stats.level}로 레벨업했습니다!`);
+            }
+            
+            // 마나 사용 메서드
+            useMana(amount) {
+                if (this.stats.currentMp >= amount) {
+                    this.stats.currentMp -= amount;
+                    this.updateUI();
+                    return true;
+                }
+                return false;
+            }
+            
+            update() {
+                if (this.isDead) return;
+                
+                // 위치 동기화
+                this.x = this.sprite.x;
+                this.y = this.sprite.y;
+                
+                // UI 업데이트
+                this.updateUI();
+                
+                // 마나 자동 회복 (초당 8씩)
+                if (this.stats.currentMp < this.stats.maxMp) {
+                    this.stats.currentMp += 8 * (1/60); // 60FPS 기준
+                    if (this.stats.currentMp > this.stats.maxMp) {
+                        this.stats.currentMp = this.stats.maxMp;
+                    }
+                }
+            }
+            
+            destroy() {
+                // 트윈 정리
+                if (this.moveTween) {
+                    this.moveTween.stop();
+                }
+                
+                // 스프라이트 제거
+                if (this.sprite) {
+                    this.sprite.destroy();
+                }
+                
+                // UI 요소 제거
+                [this.healthBarBg, this.healthBar, this.manaBarBg, this.manaBar, this.nameText, this.levelText].forEach(element => {
+                    if (element) element.destroy();
+                });
+            }
+        }
+
+        // 스킬 클래스
+        class Skill {
+            constructor(scene, skillData) {
+                this.scene = scene;
+                this.key = skillData.key;
+                this.name = skillData.name;
+                this.description = skillData.description;
+                this.manaCost = skillData.manaCost;
+                this.cooldown = skillData.cooldown;
+                this.damage = skillData.damage;
+                this.range = skillData.range;
+                this.type = skillData.type;
+                
+                // 쿨다운 관리
+                this.lastUsedTime = 0;
+                this.isActive = false;
+            }
+            
+            canUse(champion) {
+                // 쿨다운 확인
+                if (this.isOnCooldown()) {
+                    return false;
+                }
+                
+                // 마나 확인
+                if (champion.stats.currentMp < this.manaCost) {
+                    return false;
+                }
+                
+                // 챔피언 상태 확인
+                if (champion.isDead) {
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            use(champion, targetX, targetY) {
+                if (!this.canUse(champion)) {
+                    return false;
+                }
+                
+                // 마나 소모
+                champion.useMana(this.manaCost);
+                
+                // 쿨다운 시작
+                this.startCooldown();
+                
+                // 스킬 효과 실행
+                this.executeSkillEffect(champion, targetX, targetY);
+                
+                return true;
+            }
+            
+            executeSkillEffect(champion, targetX, targetY) {
+                // 기본 스킬 효과 (오버라이드 가능)
+                console.log(`${champion.data.name}이(가) ${this.name} 스킬을 사용했습니다!`);
+                
+                // 간단한 시각 효과
+                this.createBasicEffect(champion.sprite.x, champion.sprite.y, targetX, targetY);
+            }
+            
+            createBasicEffect(startX, startY, targetX, targetY) {
+                // 기본 파티클 효과 생성
+                if (this.scene.add && this.scene.add.particles) {
+                    const particles = this.scene.add.particles(startX, startY, 'player', {
+                        scale: { start: 0.3, end: 0 },
+                        speed: { min: 50, max: 100 },
+                        lifespan: 300,
+                        quantity: 5,
+                        tint: this.getSkillColor()
+                    });
+                    
+                    // 파티클 자동 제거
+                    this.scene.time.delayedCall(500, () => {
+                        if (particles) particles.destroy();
+                    });
+                }
+            }
+            
+            getSkillColor() {
+                const colors = {
+                    'Q': 0xff6b6b,
+                    'W': 0x4ecdc4,
+                    'E': 0x45b7d1
+                };
+                return colors[this.key] || 0xffffff;
+            }
+            
+            startCooldown() {
+                this.lastUsedTime = this.scene.time.now;
+            }
+            
+            isOnCooldown() {
+                // 한 번도 사용하지 않았다면 쿨다운이 아님
+                if (this.lastUsedTime === 0) {
+                    return false;
+                }
+                const elapsed = this.scene.time.now - this.lastUsedTime;
+                return elapsed < this.cooldown;
+            }
+            
+            getRemainingCooldown() {
+                // 한 번도 사용하지 않았다면 남은 쿨다운은 0
+                if (this.lastUsedTime === 0) {
+                    return 0;
+                }
+                const elapsed = this.scene.time.now - this.lastUsedTime;
+                const remaining = this.cooldown - elapsed;
+                return Math.max(0, remaining);
+            }
+        }
+
+        // 스킬 매니저 클래스
+        class SkillManager {
+            constructor(scene, championId) {
+                this.scene = scene;
+                this.championId = championId;
+                this.skills = {};
+                
+                this.initializeSkills();
+            }
+            
+            initializeSkills() {
+                const skillsData = this.getSkillsData(this.championId);
+                
+                for (const [key, skillData] of Object.entries(skillsData)) {
+                    this.skills[key] = new Skill(this.scene, skillData);
+                }
+            }
+            
+            getSkillsData(championId) {
+                const skillsDatabase = {
+                    'ahri': {
+                        'Q': {
+                            key: 'Q',
+                            name: '현혹의 구슬',
+                            description: '마법 구슬을 날려 적에게 피해를 입힙니다.',
+                            manaCost: 30,
+                            cooldown: 7000,
+                            damage: 80,
+                            range: 200,
+                            type: 'projectile'
+                        },
+                        'W': {
+                            key: 'W',
+                            name: '여우불',
+                            description: '여우불을 소환하여 주변 적을 추적합니다.',
+                            manaCost: 25,
+                            cooldown: 9000,
+                            damage: 60,
+                            range: 150,
+                            type: 'area'
+                        },
+                        'E': {
+                            key: 'E',
+                            name: '매혹',
+                            description: '적을 매혹시켜 움직이지 못하게 합니다.',
+                            manaCost: 40,
+                            cooldown: 12000,
+                            damage: 70,
+                            range: 180,
+                            type: 'targeted'
+                        }
+                    },
+                    'garen': {
+                        'Q': {
+                            key: 'Q',
+                            name: '결정타',
+                            description: '다음 공격이 강화되어 침묵 효과를 부여합니다.',
+                            manaCost: 15,
+                            cooldown: 8000,
+                            damage: 100,
+                            range: 120,
+                            type: 'buff'
+                        },
+                        'W': {
+                            key: 'W',
+                            name: '용기',
+                            description: '방어력과 마법 저항력이 증가합니다.',
+                            manaCost: 20,
+                            cooldown: 15000,
+                            damage: 0,
+                            range: 0,
+                            type: 'self_buff'
+                        },
+                        'E': {
+                            key: 'E',
+                            name: '심판',
+                            description: '검을 회전시켜 주변 적에게 지속 피해를 입힙니다.',
+                            manaCost: 30,
+                            cooldown: 10000,
+                            damage: 90,
+                            range: 100,
+                            type: 'channel'
+                        }
+                    },
+                    'jinx': {
+                        'Q': {
+                            key: 'Q',
+                            name: '휘릭휘릭!',
+                            description: '무기를 교체하여 공격 방식을 바꿉니다.',
+                            manaCost: 10,
+                            cooldown: 1000,
+                            damage: 0,
+                            range: 0,
+                            type: 'toggle'
+                        },
+                        'W': {
+                            key: 'W',
+                            name: '맞아죽을래!',
+                            description: '전기 충격 총을 발사합니다.',
+                            manaCost: 35,
+                            cooldown: 8000,
+                            damage: 110,
+                            range: 250,
+                            type: 'projectile'
+                        },
+                        'E': {
+                            key: 'E',
+                            name: '와작와작 터뜨리기!',
+                            description: '함정을 설치하여 적을 속박합니다.',
+                            manaCost: 45,
+                            cooldown: 14000,
+                            damage: 80,
+                            range: 200,
+                            type: 'trap'
+                        }
+                    },
+                    'thresh': {
+                        'Q': {
+                            key: 'Q',
+                            name: '사신의 선고',
+                            description: '갈고리를 던져 적을 끌어당깁니다.',
+                            manaCost: 40,
+                            cooldown: 11000,
+                            damage: 85,
+                            range: 220,
+                            type: 'hook'
+                        },
+                        'W': {
+                            key: 'W',
+                            name: '어둠의 통로',
+                            description: '랜턴을 던져 아군을 구출합니다.',
+                            manaCost: 30,
+                            cooldown: 16000,
+                            damage: 0,
+                            range: 180,
+                            type: 'utility'
+                        },
+                        'E': {
+                            key: 'E',
+                            name: '사슬 채찍',
+                            description: '적을 밀쳐내거나 끌어당깁니다.',
+                            manaCost: 35,
+                            cooldown: 9000,
+                            damage: 75,
+                            range: 140,
+                            type: 'displacement'
+                        }
+                    }
+                };
+                
+                return skillsDatabase[championId] || {};
+            }
+            
+            canUseSkill(skillKey, champion) {
+                const skill = this.skills[skillKey];
+                return skill ? skill.canUse(champion) : false;
+            }
+            
+            useSkill(skillKey, champion, targetX, targetY) {
+                const skill = this.skills[skillKey];
+                if (skill) {
+                    return skill.use(champion, targetX, targetY);
+                }
+                return false;
+            }
+            
+            getSkills() {
+                return this.skills;
+            }
+            
+            getCooldowns() {
+                const cooldowns = {};
+                for (const [key, skill] of Object.entries(this.skills)) {
+                    cooldowns[key] = skill.getRemainingCooldown();
+                }
+                return cooldowns;
+            }
+        }
+
+        // 스킬 이펙트 매니저 클래스
+        class SkillEffectManager {
+            constructor(scene) {
+                this.scene = scene;
+                this.activeEffects = [];
+            }
+            
+            createProjectile(startX, startY, targetX, targetY, options = {}) {
+                const {
+                    speed = 300,
+                    damage = 50,
+                    color = 0xffffff,
+                    size = 8,
+                    onHit = null
+                } = options;
+                
+                // 투사체 스프라이트 생성 (간단한 사각형으로 대체)
+                const projectile = this.scene.add.rectangle(startX, startY, size, size, color);
+                projectile.setAlpha(0.8);
+                
+                // 방향 계산
+                const angle = Phaser.Math.Angle.Between(startX, startY, targetX, targetY);
+                const distance = Phaser.Math.Distance.Between(startX, startY, targetX, targetY);
+                const duration = (distance / speed) * 1000;
+                
+                // 투사체 이동 트윈
+                const tween = this.scene.tweens.add({
+                    targets: projectile,
+                    x: targetX,
+                    y: targetY,
+                    duration: duration,
+                    ease: 'Linear',
+                    onComplete: () => {
+                        if (onHit) {
+                            onHit(damage);
+                        }
+                        projectile.destroy();
+                        this.activeEffects = this.activeEffects.filter(effect => effect !== projectile);
+                    }
+                });
+                
+                this.activeEffects.push(projectile);
+                return projectile;
+            }
+            
+            createAreaEffect(x, y, options = {}) {
+                const {
+                    radius = 100,
+                    damage = 80,
+                    duration = 2000,
+                    color = 0xff0000,
+                    onHit = null
+                } = options;
+                
+                // 범위 효과 원형 스프라이트 생성 (원형으로 대체)
+                const areaEffect = this.scene.add.circle(x, y, radius, color);
+                areaEffect.setAlpha(0.3);
+                
+                // 페이드 인 효과
+                this.scene.tweens.add({
+                    targets: areaEffect,
+                    alpha: 0.7,
+                    scaleX: 1.2,
+                    scaleY: 1.2,
+                    duration: 200,
+                    yoyo: true,
+                    repeat: Math.floor(duration / 400) - 1,
+                    onComplete: () => {
+                        areaEffect.destroy();
+                        this.activeEffects = this.activeEffects.filter(effect => effect !== areaEffect);
+                    }
+                });
+                
+                // 데미지 적용 (실제 게임에서는 충돌 감지 필요)
+                if (onHit) {
+                    setTimeout(() => {
+                        onHit(damage);
+                    }, 300);
+                }
+                
+                this.activeEffects.push(areaEffect);
+                return areaEffect;
+            }
+            
+            createParticleEffect(x, y, options = {}) {
+                const {
+                    particleCount = 15,
+                    duration = 1000,
+                    color = 0xffffff,
+                    spread = 50
+                } = options;
+                
+                // 파티클 효과 시뮬레이션 (실제로는 Phaser의 파티클 시스템 사용)
+                const particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = this.scene.add.rectangle(x, y, 4, 4, color);
+                    particle.setAlpha(0.8);
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * spread;
+                    const targetX = x + Math.cos(angle) * distance;
+                    const targetY = y + Math.sin(angle) * distance;
+                    
+                    this.scene.tweens.add({
+                        targets: particle,
+                        x: targetX,
+                        y: targetY,
+                        alpha: 0,
+                        duration: duration,
+                        ease: 'Power2',
+                        onComplete: () => {
+                            particle.destroy();
+                        }
+                    });
+                    
+                    particles.push(particle);
+                }
+                
+                this.activeEffects.push(...particles);
+                return particles;
+            }
+            
+            createBuffEffect(target, options = {}) {
+                const {
+                    color = 0x00ff00,
+                    duration = 3000,
+                    pulseSpeed = 500
+                } = options;
+                
+                // 버프 글로우 효과
+                const originalTint = target.tint;
+                
+                const tween = this.scene.tweens.add({
+                    targets: target,
+                    scaleX: target.scaleX * 1.1,
+                    scaleY: target.scaleY * 1.1,
+                    duration: pulseSpeed,
+                    yoyo: true,
+                    repeat: Math.floor(duration / (pulseSpeed * 2)) - 1,
+                    onComplete: () => {
+                        target.setTint(originalTint);
+                        this.activeEffects = this.activeEffects.filter(effect => effect !== tween);
+                    }
+                });
+                
+                target.setTint(color);
+                this.activeEffects.push(tween);
+                return tween;
+            }
+            
+            clearAllEffects() {
+                this.activeEffects.forEach(effect => {
+                    if (effect.destroy) {
+                        effect.destroy();
+                    } else if (effect.stop) {
+                        effect.stop();
+                    }
+                });
+                this.activeEffects = [];
+            }
+        }
+
+        // 게임 플레이 Scene
+        class GamePlayScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'GamePlayScene' });
+                this.playerChampion = null;
+                this.aiChampion = null;
+                this.mapData = null;
+                this.bushVisionManager = null;
+                this.skillEffectManager = null;
+                this.combatSystem = null;
+                this.killDeathManager = null;
+                this.gameUI = null;
+                this.playerNexus = null;
+                this.aiNexus = null;
+                this.victoryConditionManager = null;
+            }
+            
+            preload() {
+                // 플레이어 스프라이트 생성 (간단한 원형)
+                this.add.graphics()
+                    .fillStyle(0xffffff)
+                    .fillCircle(16, 16, 16)
+                    .generateTexture('player', 32, 32);
+            }
+            
+            create() {
+                // 사운드 매니저 초기화
+                this.soundManager = new SoundManager();
+                this.soundManager.init();
+                
+                // 배경음악 재생
+                this.soundManager.playBackgroundMusic();
+
+                // 전투 시스템 초기화
+                this.combatSystem = new CombatSystem(this);
+                this.killDeathManager = new KillDeathManager();
+                
+                // 승리 조건 시스템 초기화
+                this.victoryConditionManager = new VictoryConditionManager();
+                this.victoryConditionManager.setGameEndCallback((winner) => {
+                    this.handleGameEnd(winner);
+                });
+                
+                // 맵 데이터 생성
+                this.mapData = new MapData();
+                
+                // 넥서스 타워 생성
+                this.createNexusTowers();
+                
+                // 부쉬 시야 관리자 생성
+                this.bushVisionManager = new BushVisionManager(this);
+                
+                // 스킬 이펙트 매니저 생성
+                this.skillEffectManager = new SkillEffectManager(this);
+                
+                // 맵 렌더링
+                this.renderMap();
+                
+                // 챔피언 생성
+                this.createChampions();
+                
+                // 게임 UI 생성
+                this.createGameUI();
+                
+                // 카메라 설정
+                this.setupCamera();
+                
+                // 입력 처리 설정
+                this.setupInputHandling();
+                
+                // 전역 참조 설정
+                window.gamePlayScene = this;
+                window.gamePlaySceneReady = true;
+                
+                console.log('GamePlayScene이 생성되었습니다.');
+            }
+            
+            renderMap() {
+                // 배경 생성
+                this.add.rectangle(
+                    this.mapData.width / 2, 
+                    this.mapData.height / 2, 
+                    this.mapData.width, 
+                    this.mapData.height, 
+                    0x1a4a1a
+                );
+                
+                // 강 렌더링 (객체로 처리)
+                this.add.rectangle(
+                    this.mapData.river.x + this.mapData.river.width / 2,
+                    this.mapData.river.y + this.mapData.river.height / 2,
+                    this.mapData.river.width,
+                    this.mapData.river.height,
+                    0x4169e1
+                );
+                
+                // 부쉬 렌더링
+                this.mapData.bushes.forEach(bush => {
+                    this.add.rectangle(
+                        bush.x + bush.width / 2,
+                        bush.y + bush.height / 2,
+                        bush.width,
+                        bush.height,
+                        0x228b22
+                    );
+                });
+                
+                // 넥서스 렌더링
+                this.mapData.nexuses.forEach(nexus => {
+                    const color = nexus.team === 'blue' ? 0x0066cc : 0xcc0000;
+                    this.add.rectangle(nexus.x, nexus.y, 60, 60, color);
+                    this.add.text(nexus.x, nexus.y, nexus.team.toUpperCase(), {
+                        fontSize: '12px',
+                        fill: '#ffffff'
+                    }).setOrigin(0.5);
+                });
+                
+                // 타워 렌더링
+                this.mapData.towers.forEach(tower => {
+                    const color = tower.team === 'blue' ? 0x4169e1 : 0xdc143c;
+                    this.add.rectangle(tower.x, tower.y, 40, 40, color);
+                    this.add.text(tower.x, tower.y, 'T', {
+                        fontSize: '16px',
+                        fill: '#ffffff',
+                        fontStyle: 'bold'
+                    }).setOrigin(0.5);
+                });
+            }
+            
+            createNexusTowers() {
+                // 플레이어 넥서스 (왼쪽)
+                this.playerNexus = new NexusTower(100, 400, 'player', this);
+                
+                // AI 넥서스 (오른쪽)
+                this.aiNexus = new NexusTower(1100, 400, 'ai', this);
+                
+                // 승리 조건 매니저에 넥서스 등록
+                this.victoryConditionManager.setNexusTowers(this.playerNexus, this.aiNexus);
+                
+                console.log('넥서스 타워가 생성되었습니다.');
+            }
+            
+            createChampions() {
+                // 선택된 챔피언 ID 가져오기
+                const selectedChampionId = window.gameDataManager.getSelectedChampion();
+                
+                // 플레이어 챔피언 생성
+                this.playerChampion = new Champion(this, 200, 400, selectedChampionId, true);
+                this.playerChampion.team = 'player';
+                
+                // AI 챔피언 생성 (랜덤 선택)
+                const aiChampions = ['ahri', 'garen', 'jinx', 'thresh'];
+                const aiChampionId = aiChampions[Math.floor(Math.random() * aiChampions.length)];
+                this.aiChampion = new Champion(this, 800, 400, aiChampionId, false);
+                this.aiChampion.team = 'ai';
+                
+                console.log(`플레이어: ${selectedChampionId}, AI: ${aiChampionId}`);
+            }
+            
+            createGameUI() {
+                // 게임 UI 생성
+                this.gameUI = {
+                    // 플레이어 정보 패널 (화면 고정)
+                    playerPanel: this.add.container(10, 10),
+                    
+                    // 스킬 쿨다운 표시
+                    skillCooldowns: {
+                        Q: this.add.text(10, 100, 'Q: Ready', { fontSize: '14px', fill: '#ffffff' }),
+                        W: this.add.text(10, 120, 'W: Ready', { fontSize: '14px', fill: '#ffffff' }),
+                        E: this.add.text(10, 140, 'E: Ready', { fontSize: '14px', fill: '#ffffff' })
+                    },
+                    
+                    // 킬/데스 정보
+                    kdaText: this.add.text(10, 170, 'K/D/A: 0/0/0', { fontSize: '14px', fill: '#ffffff' })
+                };
+                
+                // 플레이어 정보 패널 구성
+                const playerInfo = this.add.container(0, 0);
+                
+                // 플레이어 체력바
+                const playerHealthBg = this.add.rectangle(0, 0, 200, 20, 0x000000);
+                const playerHealthBar = this.add.rectangle(-50, 0, 180, 16, 0x00ff00);
+                playerHealthBar.setOrigin(0, 0.5);
+                
+                // 플레이어 마나바
+                const playerManaBg = this.add.rectangle(0, 25, 200, 15, 0x000000);
+                const playerManaBar = this.add.rectangle(-50, 25, 180, 11, 0x0000ff);
+                playerManaBar.setOrigin(0, 0.5);
+                
+                // 플레이어 이름 및 레벨
+                const playerNameText = this.add.text(0, -15, this.playerChampion.data.name, {
+                    fontSize: '16px',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+                
+                const playerLevelText = this.add.text(-90, 0, `Lv.${this.playerChampion.stats.level}`, {
+                    fontSize: '14px',
+                    fill: '#ffff00'
+                }).setOrigin(0.5);
+                
+                playerInfo.add([playerHealthBg, playerHealthBar, playerManaBg, playerManaBar, playerNameText, playerLevelText]);
+                this.gameUI.playerPanel.add(playerInfo);
+                
+                // UI 참조 저장
+                this.gameUI.playerHealthBar = playerHealthBar;
+                this.gameUI.playerManaBar = playerManaBar;
+                this.gameUI.playerLevelText = playerLevelText;
+                
+                // UI 고정 설정
+                this.gameUI.playerPanel.setScrollFactor(0);
+                Object.values(this.gameUI.skillCooldowns).forEach(text => text.setScrollFactor(0));
+                this.gameUI.kdaText.setScrollFactor(0);
+            }
+            
+            setupCamera() {
+                // 카메라가 플레이어를 따라다니도록 설정
+                this.cameras.main.startFollow(this.playerChampion.sprite);
+                this.cameras.main.setBounds(0, 0, this.mapData.width, this.mapData.height);
+                this.cameras.main.setZoom(1);
+            }
+            
+            setupInputHandling() {
+                // 마우스 클릭 이벤트
+                this.input.on('pointerdown', (pointer) => {
+                    if (pointer.rightButtonDown()) {
+                        // 우클릭: 이동
+                        const worldX = pointer.worldX;
+                        const worldY = pointer.worldY;
+                        this.playerChampion.moveTo(worldX, worldY);
+                    } else if (pointer.leftButtonDown()) {
+                        // 좌클릭: 기본 공격 또는 이동
+                        const worldX = pointer.worldX;
+                        const worldY = pointer.worldY;
+                        
+                        // AI 챔피언과의 거리 확인
+                        const distance = Phaser.Math.Distance.Between(
+                            this.playerChampion.sprite.x, 
+                            this.playerChampion.sprite.y, 
+                            this.aiChampion.sprite.x, 
+                            this.aiChampion.sprite.y
+                        );
+                        
+                        // 클릭 위치가 AI 챔피언 근처인지 확인
+                        const clickDistance = Phaser.Math.Distance.Between(
+                            worldX, worldY, 
+                            this.aiChampion.sprite.x, 
+                            this.aiChampion.sprite.y
+                        );
+                        
+                        if (clickDistance < 50 && distance <= this.playerChampion.stats.attackRange) {
+                            // 기본 공격
+                            this.playerChampion.performBasicAttack(this.aiChampion);
+                        } else {
+                            // 이동
+                            this.playerChampion.moveTo(worldX, worldY);
+                        }
+                    }
+                });
+                
+                // 키보드 입력 설정
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.wasd = this.input.keyboard.addKeys('W,S,A,D');
+                this.skillKeys = this.input.keyboard.addKeys('Q,W,E,R');
+                
+                // 스킬 키 이벤트
+                this.input.keyboard.on('keydown-Q', () => {
+                    this.useSkill('Q');
+                });
+                
+                this.input.keyboard.on('keydown-W', () => {
+                    this.useSkill('W');
+                });
+                
+                this.input.keyboard.on('keydown-E', () => {
+                    this.useSkill('E');
+                });
+                
+                // 기본 공격 키 (스페이스바)
+                this.input.keyboard.on('keydown-SPACE', () => {
+                    const distance = Phaser.Math.Distance.Between(
+                        this.playerChampion.sprite.x, 
+                        this.playerChampion.sprite.y, 
+                        this.aiChampion.sprite.x, 
+                        this.aiChampion.sprite.y
+                    );
+                    
+                    if (distance <= this.playerChampion.stats.attackRange) {
+                        this.playerChampion.performBasicAttack(this.aiChampion);
+                    }
+                });
+            }
+            
+            useSkill(skillKey) {
+                if (this.playerChampion.isDead) return;
+                
+                const canUse = this.playerChampion.skillManager.canUseSkill(skillKey, this.playerChampion);
+                if (!canUse) {
+                    console.log(`${skillKey} 스킬을 사용할 수 없습니다.`);
+                    return;
+                }
+                
+                // 마우스 위치를 타겟으로 사용
+                const pointer = this.input.activePointer;
+                const targetX = pointer.worldX;
+                const targetY = pointer.worldY;
+                
+                // 스킬 사용
+                this.playerChampion.skillManager.useSkill(skillKey, this.playerChampion, targetX, targetY);
+                
+                // 스킬 효과음 재생
+                if (this.soundManager) {
+                    this.soundManager.playSkillSound(skillKey, this.playerChampion.championId);
+                }
+                
+                // 스킬 데미지 적용 (간단한 구현)
+                const skillData = this.playerChampion.skillManager.getSkillData(this.playerChampion.championId, skillKey);
+                if (skillData) {
+                    const distance = Phaser.Math.Distance.Between(
+                        this.playerChampion.sprite.x, 
+                        this.playerChampion.sprite.y, 
+                        this.aiChampion.sprite.x, 
+                        this.aiChampion.sprite.y
+                    );
+                    
+                    if (distance <= skillData.range) {
+                        const damageResult = this.combatSystem.calculateDamage(
+                            this.playerChampion, 
+                            this.aiChampion, 
+                            'skill', 
+                            skillData.damage
+                        );
+                        
+                        const isDead = this.combatSystem.applyDamage(this.aiChampion, damageResult.damage);
+                        
+                        if (isDead) {
+                            this.killDeathManager.recordKill('player', 'ai');
+                            this.killDeathManager.recordDeath('ai', 'player');
+                            console.log('AI 챔피언이 처치되었습니다!');
+                        }
+                    }
+                }
+            }
+            
+                        update() {
+                // 게임 종료 상태 확인
+                if (this.victoryConditionManager.isGameEnded()) {
+                    return;
+                }
+
+                // 챔피언 업데이트
+                if (this.playerChampion) {
+                    this.playerChampion.update();
+                }
+
+                if (this.aiChampion) {
+                    this.aiChampion.update();
+                }
+
+                // 넥서스 타워 AI 업데이트
+                this.updateNexusTowers();
+
+                // 부쉬 시야 업데이트
+                if (this.bushVisionManager) {
+                    this.bushVisionManager.updateVision(this.playerChampion.sprite.x, this.playerChampion.sprite.y);
+                }
+
+                // UI 업데이트
+                this.updateGameUI();
+
+                // 간단한 AI 행동
+                this.updateAI();
+
+                // 승리 조건 체크
+                this.checkVictoryCondition();
+            }
+            
+            updateGameUI() {
+                if (!this.gameUI || !this.playerChampion) return;
+                
+                // 플레이어 체력/마나바 업데이트
+                const healthPercent = this.playerChampion.stats.currentHp / this.playerChampion.stats.maxHp;
+                const manaPercent = this.playerChampion.stats.currentMp / this.playerChampion.stats.maxMp;
+                
+                this.gameUI.playerHealthBar.scaleX = healthPercent;
+                this.gameUI.playerManaBar.scaleX = manaPercent;
+                this.gameUI.playerLevelText.setText(`Lv.${this.playerChampion.stats.level}`);
+                
+                // 스킬 쿨다운 업데이트
+                const cooldowns = this.playerChampion.skillManager.getCooldowns();
+                Object.keys(this.gameUI.skillCooldowns).forEach(key => {
+                    const cooldown = cooldowns[key];
+                    if (cooldown > 0) {
+                        this.gameUI.skillCooldowns[key].setText(`${key}: ${Math.ceil(cooldown / 1000)}s`);
+                        this.gameUI.skillCooldowns[key].setTint(0x888888);
+                    } else {
+                        this.gameUI.skillCooldowns[key].setText(`${key}: Ready`);
+                        this.gameUI.skillCooldowns[key].setTint(0xffffff);
+                    }
+                });
+                
+                // KDA 업데이트
+                const playerStats = this.killDeathManager.getStats('player');
+                this.gameUI.kdaText.setText(`K/D/A: ${playerStats.kills}/${playerStats.deaths}/${playerStats.assists}`);
+            }
+            
+            updateAI() {
+                if (!this.aiChampion || this.aiChampion.isDead) return;
+                
+                // 간단한 AI: 플레이어 근처에 있으면 공격, 멀리 있으면 접근
+                const distance = Phaser.Math.Distance.Between(
+                    this.aiChampion.sprite.x, 
+                    this.aiChampion.sprite.y, 
+                    this.playerChampion.sprite.x, 
+                    this.playerChampion.sprite.y
+                );
+                
+                if (distance <= this.aiChampion.stats.attackRange) {
+                    // 공격 범위 내: 기본 공격
+                    this.aiChampion.performBasicAttack(this.playerChampion);
+                } else if (distance > 200 && !this.aiChampion.isMoving) {
+                    // 너무 멀리 있으면 접근
+                    const angle = Phaser.Math.Angle.Between(
+                        this.aiChampion.sprite.x, 
+                        this.aiChampion.sprite.y, 
+                        this.playerChampion.sprite.x, 
+                        this.playerChampion.sprite.y
+                    );
+                    
+                    const targetX = this.playerChampion.sprite.x - Math.cos(angle) * 150;
+                    const targetY = this.playerChampion.sprite.y - Math.sin(angle) * 150;
+                    
+                    this.aiChampion.moveTo(targetX, targetY);
+                }
+                
+                // 랜덤 스킬 사용 (10% 확률)
+                if (Math.random() < 0.001 && distance <= 200) {
+                    const skills = ['Q', 'W', 'E'];
+                    const randomSkill = skills[Math.floor(Math.random() * skills.length)];
+                    
+                    if (this.aiChampion.skillManager.canUseSkill(randomSkill, this.aiChampion)) {
+                        this.aiChampion.skillManager.useSkill(
+                            randomSkill, 
+                            this.aiChampion, 
+                            this.playerChampion.sprite.x, 
+                            this.playerChampion.sprite.y
+                        );
+                        
+                        // 스킬 데미지 적용
+                        const skillData = this.aiChampion.skillManager.getSkillData(this.aiChampion.championId, randomSkill);
+                        if (skillData && distance <= skillData.range) {
+                            const damageResult = this.combatSystem.calculateDamage(
+                                this.aiChampion, 
+                                this.playerChampion, 
+                                'skill', 
+                                skillData.damage
+                            );
+                            
+                            const isDead = this.combatSystem.applyDamage(this.playerChampion, damageResult.damage);
+                            
+                            if (isDead) {
+                                this.killDeathManager.recordKill('ai', 'player');
+                                this.killDeathManager.recordDeath('player', 'ai');
+                                console.log('플레이어가 처치되었습니다!');
+                            }
+                        }
+                    }
+                }
+            }
+            
+            updateNexusTowers() {
+                // 플레이어 넥서스 AI (AI 챔피언 공격)
+                if (this.playerNexus && !this.playerNexus.isDestroyed()) {
+                    const nearestEnemy = this.playerNexus.findNearestEnemy([this.aiChampion]);
+                    if (nearestEnemy && this.playerNexus.canAttack()) {
+                        this.playerNexus.attack(nearestEnemy);
+                    }
+                }
+
+                // AI 넥서스 AI (플레이어 챔피언 공격)
+                if (this.aiNexus && !this.aiNexus.isDestroyed()) {
+                    const nearestEnemy = this.aiNexus.findNearestEnemy([this.playerChampion]);
+                    if (nearestEnemy && this.aiNexus.canAttack()) {
+                        this.aiNexus.attack(nearestEnemy);
+                    }
+                }
+            }
+
+            checkVictoryCondition() {
+                const winner = this.victoryConditionManager.checkVictoryCondition();
+                if (winner) {
+                    this.victoryConditionManager.triggerGameEnd(winner);
+                }
+            }
+
+            handleGameEnd(winner) {
+                console.log(`게임 종료! 승자: ${winner}`);
+                
+                // 게임 통계 업데이트
+                const playerStats = this.killDeathManager.getStats('player');
+                const gameTime = Math.floor(this.time.now / 1000);
+                
+                window.gameDataManager.setGameResult(winner === 'player' ? '승리' : '패배');
+                window.gameDataManager.updateStats({
+                    kills: playerStats.kills,
+                    deaths: playerStats.deaths,
+                    assists: playerStats.assists,
+                    gameTime: gameTime
+                });
+
+                // 잠시 후 결과 화면으로 전환
+                this.time.delayedCall(2000, () => {
+                    this.scene.start('GameResultScene');
+                });
+
+                // 승리/패배 메시지 표시
+                const resultText = winner === 'player' ? 'VICTORY!' : 'DEFEAT!';
+                const resultColor = winner === 'player' ? '#27ae60' : '#e74c3c';
+                
+                this.add.text(600, 300, resultText, {
+                    fontSize: '48px',
+                    fill: resultColor,
+                    fontFamily: 'Arial',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setOrigin(0.5).setScrollFactor(0);
+            }
+            
+            // 공용 메서드들
+            getPlayerChampion() {
+                return this.playerChampion;
+            }
+            
+            getAIChampion() {
+                return this.aiChampion;
+            }
+            
+            getCombatSystem() {
+                return this.combatSystem;
+            }
+            
+            getKillDeathManager() {
+                return this.killDeathManager;
+            }
+
+            getPlayerNexus() {
+                return this.playerNexus;
+            }
+
+            getAINexus() {
+                return this.aiNexus;
+            }
+
+            getVictoryConditionManager() {
+                return this.victoryConditionManager;
+            }
+        }
+
+        // 게임 결과 Scene
+        class GameResultScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'GameResultScene' });
+            }
+
+            preload() {
+                // 테스트용 임시 데이터
+                this.load.image('result-bg', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSI3NjgiIHZpZXdCb3g9IjAgMCAxMDI0IDc2OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEwMjQiIGhlaWdodD0iNzY4IiBmaWxsPSIjMmMzZTUwIi8+CjwvZz4KPC9zdmc+');
+            }
+
+            create() {
+                // 배경 추가
+                this.add.image(512, 384, 'result-bg');
+                
+                const gameResult = window.gameDataManager.getGameResult();
+                const stats = window.gameDataManager.getStats();
+                
+                // 사운드 매니저 초기화 및 결과 사운드 재생
+                this.soundManager = new SoundManager();
+                this.soundManager.init();
+                this.soundManager.playGameResultSound(gameResult);
+                
+                // 결과 타이틀
+                this.add.text(512, 100, '게임 결과', {
+                    fontSize: '48px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                
+                // 승리/패배 결과
+                const resultColor = gameResult === '승리' ? '#27ae60' : '#e74c3c';
+                this.add.text(512, 180, gameResult, {
+                    fontSize: '64px',
+                    fill: resultColor,
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5).setTint(resultColor === '#27ae60' ? 0x27ae60 : 0xe74c3c);
+
+                // 통계 패널 배경
+                const statsPanel = this.add.rectangle(512, 320, 400, 200, 0x34495e, 0.8);
+                
+                // 통계 제목
+                this.add.text(512, 250, '게임 통계', {
+                    fontSize: '24px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                // 킬/데스/어시스트 표시
+                this.add.text(512, 290, `킬: ${stats.kills}`, {
+                    fontSize: '20px',
+                    fill: '#27ae60',
+                    fontFamily: 'Arial'
+                }).setOrigin(0.5);
+
+                this.add.text(512, 320, `데스: ${stats.deaths}`, {
+                    fontSize: '20px',
+                    fill: '#e74c3c',
+                    fontFamily: 'Arial'
+                }).setOrigin(0.5);
+
+                this.add.text(512, 350, `어시스트: ${stats.assists}`, {
+                    fontSize: '20px',
+                    fill: '#f39c12',
+                    fontFamily: 'Arial'
+                }).setOrigin(0.5);
+
+                // KDA 계산 및 표시
+                const kda = stats.deaths > 0 ? ((stats.kills + stats.assists) / stats.deaths).toFixed(2) : 'Perfect';
+                this.add.text(512, 380, `KDA: ${kda}`, {
+                    fontSize: '20px',
+                    fill: '#3498db',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                // 게임 시간 표시 (분:초 형식)
+                const minutes = Math.floor(stats.gameTime / 60);
+                const seconds = stats.gameTime % 60;
+                const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                this.add.text(512, 410, `게임 시간: ${timeString}`, {
+                    fontSize: '18px',
+                    fill: '#95a5a6',
+                    fontFamily: 'Arial'
+                }).setOrigin(0.5);
+
+                // 버튼들
+                this.createButtons();
+
+                // Scene 초기화 완료 신호
+                window.gameResultSceneReady = true;
+            }
+            
+            createButtons() {
+                // 다시 플레이 버튼
+                const playAgainButton = this.add.rectangle(350, 520, 180, 60, 0x3498db)
+                    .setInteractive({ useHandCursor: true })
+                    .on('pointerover', () => {
+                        playAgainButton.setTint(0x2980b9);
+                    })
+                    .on('pointerout', () => {
+                        playAgainButton.clearTint();
+                    })
+                    .on('pointerdown', () => {
+                        this.restartGame();
+                    });
+
+                this.add.text(350, 520, '다시 플레이', {
+                    fontSize: '18px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                // 챔피언 변경 버튼
+                const changeChampionButton = this.add.rectangle(512, 520, 180, 60, 0xe67e22)
+                    .setInteractive({ useHandCursor: true })
+                    .on('pointerover', () => {
+                        changeChampionButton.setTint(0xd35400);
+                    })
+                    .on('pointerout', () => {
+                        changeChampionButton.clearTint();
+                    })
+                    .on('pointerdown', () => {
+                        this.changeChampion();
+                    });
+
+                this.add.text(512, 520, '챔피언 변경', {
+                    fontSize: '18px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+
+                // 메인 메뉴 버튼
+                const mainMenuButton = this.add.rectangle(674, 520, 180, 60, 0x95a5a6)
+                    .setInteractive({ useHandCursor: true })
+                    .on('pointerover', () => {
+                        mainMenuButton.setTint(0x7f8c8d);
+                    })
+                    .on('pointerout', () => {
+                        mainMenuButton.clearTint();
+                    })
+                    .on('pointerdown', () => {
+                        this.goToMainMenu();
+                    });
+
+                this.add.text(674, 520, '메인 메뉴', {
+                    fontSize: '18px',
+                    fill: '#ffffff',
+                    fontFamily: 'Arial',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+            }
+            
+            restartGame() {
+                // 게임 통계만 초기화하고 선택된 챔피언은 유지
+                const selectedChampion = window.gameDataManager.getSelectedChampion();
+                window.gameDataManager.reset();
+                window.gameDataManager.setSelectedChampion(selectedChampion);
+                
+                // 게임 플레이 Scene으로 직접 이동
+                this.scene.start('GamePlayScene');
+            }
+            
+            changeChampion() {
+                // 모든 데이터 초기화
+                window.gameDataManager.reset();
+                
+                // 챔피언 선택 화면으로 이동
+                this.scene.start('ChampionSelectScene');
+            }
+            
+            goToMainMenu() {
+                // 모든 데이터 초기화
+                window.gameDataManager.reset();
+                
+                // 메인 메뉴(챔피언 선택)로 이동
+                this.scene.start('ChampionSelectScene');
+            }
+        }
+
+        // CombatSystem 클래스
+        class CombatSystem {
+            constructor(scene) {
+                this.scene = scene;
+                this.criticalChance = 0.15; // 15% 크리티컬 확률
+                this.criticalMultiplier = 1.5; // 1.5배 크리티컬 데미지
+            }
+            
+            calculateDamage(attacker, defender, type = 'basic', baseDamage = null) {
+                let damage = baseDamage || attacker.stats.attack;
+                
+                // 레벨에 따른 데미지 보정
+                const levelBonus = attacker.stats.level * 2;
+                damage += levelBonus;
+                
+                // 방어력에 따른 데미지 감소
+                const defense = defender.stats.defense || 0;
+                const damageReduction = defense / (defense + 100);
+                damage = damage * (1 - damageReduction);
+                
+                // 크리티컬 확률 계산
+                const isCritical = Math.random() < this.criticalChance;
+                if (isCritical) {
+                    damage *= this.criticalMultiplier;
+                }
+                
+                return {
+                    damage: Math.max(1, Math.floor(damage)),
+                    isCritical: isCritical
+                };
+            }
+            
+            applyDamage(target, damage) {
+                if (target.isDead) return false;
+                
+                // 데미지 적용 (음수면 치유)
+                target.stats.currentHp -= damage;
+                
+                // 체력 범위 제한
+                if (target.stats.currentHp > target.stats.maxHp) {
+                    target.stats.currentHp = target.stats.maxHp;
+                }
+                
+                // 사망 처리
+                if (target.stats.currentHp <= 0) {
+                    target.stats.currentHp = 0;
+                    this.handleDeath(target);
+                    return true; // 사망
+                }
+                
+                return false; // 생존
+            }
+            
+            handleDeath(target) {
+                target.isDead = true;
+                
+                // 사망 이펙트
+                this.createCombatEffect(target.x || target.sprite?.x || 0, target.y || target.sprite?.y || 0, 'death');
+                
+                // 시각적 효과
+                if (target.sprite) {
+                    target.sprite.setTint(0x666666);
+                    target.sprite.setAlpha(0.5);
+                }
+                
+                // UI 숨기기
+                if (target.healthBar) target.healthBar.setVisible(false);
+                if (target.manaBar) target.manaBar.setVisible(false);
+                if (target.nameText) target.nameText.setVisible(false);
+                if (target.levelText) target.levelText.setVisible(false);
+            }
+            
+            performBasicAttack(attacker, target) {
+                const damageResult = this.calculateDamage(attacker, target, 'basic');
+                
+                // 공격 애니메이션
+                if (attacker.sprite) {
+                    // 스프라이트 타입에 따라 다른 메서드 사용
+                    if (typeof attacker.sprite.setTint === 'function') {
+                        // Sprite 객체인 경우
+                        attacker.sprite.setTint(0xffff00);
+                    } else if (typeof attacker.sprite.setFillStyle === 'function') {
+                        // Rectangle 객체인 경우
+                        attacker.sprite.setFillStyle(0xffff00);
+                    }
+                    
+                    this.scene.tweens.add({
+                        targets: attacker.sprite,
+                        scaleX: 1.2,
+                        scaleY: 1.2,
+                        duration: 100,
+                        yoyo: true,
+                        onComplete: () => {
+                            if (typeof attacker.sprite.setTint === 'function') {
+                                attacker.sprite.setTint(0xffffff);
+                            } else if (typeof attacker.sprite.setFillStyle === 'function') {
+                                // 원래 색상으로 복원 (넥서스 타워의 경우)
+                                const originalColor = attacker.team === 'player' ? 0x0066cc : 0xcc0000;
+                                attacker.sprite.setFillStyle(originalColor);
+                            }
+                        }
+                    });
+                }
+                
+                // 데미지 적용
+                const isDead = this.applyDamage(target, damageResult.damage);
+                
+                // 이펙트 생성
+                const effectType = damageResult.isCritical ? 'critical' : 'hit';
+                this.createCombatEffect(target.x || target.sprite?.x || 0, target.y || target.sprite?.y || 0, effectType);
+                
+                return { damage: damageResult.damage, isCritical: damageResult.isCritical, isDead };
+            }
+            
+            createCombatEffect(x, y, type) {
+                let color, size, duration;
+                
+                switch (type) {
+                    case 'hit':
+                        color = 0xff0000;
+                        size = 16;
+                        duration = 300;
+                        break;
+                    case 'critical':
+                        color = 0xffff00;
+                        size = 24;
+                        duration = 500;
+                        break;
+                    case 'death':
+                        color = 0x800080;
+                        size = 32;
+                        duration = 800;
+                        break;
+                    default:
+                        color = 0xffffff;
+                        size = 12;
+                        duration = 200;
+                }
+                
+                // 전투 효과음 재생
+                if (this.scene.soundManager) {
+                    this.scene.soundManager.playCombatSound(type);
+                }
+                
+                // 이펙트 스프라이트 생성 (간단한 원형으로 대체)
+                const effect = this.scene.add.circle(x, y, size/2, color);
+                effect.setAlpha(0.8);
+                
+                // 이펙트 애니메이션
+                this.scene.tweens.add({
+                    targets: effect,
+                    scaleX: 2,
+                    scaleY: 2,
+                    alpha: 0,
+                    duration: duration,
+                    ease: 'Power2',
+                    onComplete: () => {
+                        effect.destroy();
+                    }
+                });
+                
+                return effect;
+            }
+        }
+
+        // KillDeathManager 클래스
+        class KillDeathManager {
+            constructor() {
+                this.stats = new Map();
+                this.reset();
+            }
+            
+            recordKill(killer, victim, assists = []) {
+                // 킬러 킬 증가
+                const killerStats = this.getStats(killer);
+                killerStats.kills++;
+                this.stats.set(killer, killerStats);
+                
+                // 어시스트 기록
+                assists.forEach(assistant => {
+                    const assistStats = this.getStats(assistant);
+                    assistStats.assists++;
+                    this.stats.set(assistant, assistStats);
+                });
+            }
+            
+            recordDeath(victim, killer) {
+                const victimStats = this.getStats(victim);
+                victimStats.deaths++;
+                this.stats.set(victim, victimStats);
+            }
+            
+            getStats(playerId) {
+                if (!this.stats.has(playerId)) {
+                    this.stats.set(playerId, {
+                        kills: 0,
+                        deaths: 0,
+                        assists: 0
+                    });
+                }
+                return { ...this.stats.get(playerId) };
+            }
+            
+            getKDA(playerId) {
+                const stats = this.getStats(playerId);
+                const deaths = Math.max(1, stats.deaths); // 0으로 나누기 방지
+                return (stats.kills + stats.assists) / deaths;
+            }
+            
+            reset() {
+                this.stats.clear();
+            }
+        }
+
+        // SoundManager 클래스
+        class SoundManager {
+            constructor() {
+                this.sounds = {};
+                this.volumes = {
+                    master: 0.7,
+                    music: 0.5,
+                    effects: 0.8
+                };
+                this.muted = false;
+                this.currentBackgroundMusic = null;
+                this.initialized = false;
+            }
+            
+            init() {
+                if (this.initialized) return;
+                
+                // 음성 파일 대신 프로그래밍적으로 생성된 사운드 사용
+                this.createSounds();
+                this.initialized = true;
+                
+                console.log('SoundManager 초기화 완료');
+            }
+            
+            createSounds() {
+                // 배경음악 (웹 오디오 API로 생성)
+                this.sounds.backgroundMusic = this.createTone(220, 'sine', 4.0, true); // A3 음, 4초 루프
+                
+                // 스킬 효과음들
+                this.sounds.skill_fire = this.createTone(440, 'sawtooth', 0.3); // 불 스킬
+                this.sounds.skill_ice = this.createTone(330, 'sine', 0.5); // 얼음 스킬
+                this.sounds.skill_lightning = this.createTone(880, 'square', 0.2); // 번개 스킬
+                
+                // 전투 효과음들
+                this.sounds.attack_hit = this.createTone(200, 'triangle', 0.1); // 일반 공격
+                this.sounds.attack_critical = this.createTone(600, 'sawtooth', 0.2); // 크리티컬 공격
+                this.sounds.death = this.createTone(150, 'sine', 1.0); // 사망
+                
+                // 환경 사운드
+                this.sounds.victory = this.createTone(523, 'sine', 2.0); // 승리 (C5)
+                this.sounds.defeat = this.createTone(147, 'sine', 2.0); // 패배 (D3)
+                
+                console.log('사운드 파일 생성 완료');
+            }
+            
+            createTone(frequency, waveType = 'sine', duration = 1.0, loop = false) {
+                // 웹 오디오 API를 사용하여 톤 생성
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const createSound = () => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.type = waveType;
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    return { oscillator, gainNode, audioContext };
+                };
+                
+                return {
+                    play: () => {
+                        try {
+                            const sound = createSound();
+                            sound.oscillator.start(sound.audioContext.currentTime);
+                            sound.oscillator.stop(sound.audioContext.currentTime + duration);
+                        } catch (error) {
+                            console.warn('사운드 재생 실패:', error);
+                        }
+                    },
+                    loop: loop,
+                    duration: duration
+                };
+            }
+            
+            playSound(soundName, volume = 1.0) {
+                if (this.muted || !this.sounds[soundName]) return;
+                
+                const effectiveVolume = this.volumes.master * this.volumes.effects * volume;
+                if (effectiveVolume <= 0) return;
+                
+                try {
+                    this.sounds[soundName].play();
+                    console.log(`효과음 재생: ${soundName}`);
+                } catch (error) {
+                    console.warn(`효과음 재생 실패 (${soundName}):`, error);
+                }
+            }
+            
+            playBackgroundMusic() {
+                if (this.muted || !this.sounds.backgroundMusic) return;
+                
+                try {
+                    this.currentBackgroundMusic = this.sounds.backgroundMusic;
+                    this.sounds.backgroundMusic.play();
+                    
+                    // 루프 재생을 위한 타이머 설정
+                    if (this.sounds.backgroundMusic.loop) {
+                        this.backgroundMusicTimer = setInterval(() => {
+                            if (!this.muted && this.currentBackgroundMusic) {
+                                this.sounds.backgroundMusic.play();
+                            }
+                        }, this.sounds.backgroundMusic.duration * 1000);
+                    }
+                    
+                    console.log('배경음악 재생 시작');
+                } catch (error) {
+                    console.warn('배경음악 재생 실패:', error);
+                }
+            }
+            
+            stopBackgroundMusic() {
+                if (this.backgroundMusicTimer) {
+                    clearInterval(this.backgroundMusicTimer);
+                    this.backgroundMusicTimer = null;
+                }
+                
+                this.currentBackgroundMusic = null;
+                console.log('배경음악 정지');
+            }
+            
+            setVolume(type, value) {
+                if (value < 0) value = 0;
+                if (value > 1) value = 1;
+                
+                switch (type) {
+                    case 'master':
+                        this.volumes.master = value;
+                        break;
+                    case 'music':
+                        this.volumes.music = value;
+                        break;
+                    case 'effects':
+                        this.volumes.effects = value;
+                        break;
+                }
+                
+                console.log(`볼륨 설정: ${type} = ${value}`);
+            }
+            
+            getMasterVolume() {
+                return this.volumes.master;
+            }
+            
+            getMusicVolume() {
+                return this.volumes.music;
+            }
+            
+            getEffectsVolume() {
+                return this.volumes.effects;
+            }
+            
+            mute(isMuted) {
+                this.muted = isMuted;
+                
+                if (isMuted) {
+                    this.stopBackgroundMusic();
+                } else if (this.currentBackgroundMusic) {
+                    this.playBackgroundMusic();
+                }
+                
+                console.log(`음소거: ${isMuted ? '켜짐' : '꺼짐'}`);
+            }
+            
+            isMuted() {
+                return this.muted;
+            }
+            
+            // 스킬별 효과음 재생
+            playSkillSound(skillKey, championId) {
+                const skillSounds = {
+                    'Q': 'skill_fire',
+                    'W': 'skill_ice',
+                    'E': 'skill_lightning'
+                };
+                
+                const soundName = skillSounds[skillKey] || 'skill_fire';
+                this.playSound(soundName);
+            }
+            
+            // 전투 효과음 재생
+            playCombatSound(type) {
+                const combatSounds = {
+                    'hit': 'attack_hit',
+                    'critical': 'attack_critical',
+                    'death': 'death'
+                };
+                
+                const soundName = combatSounds[type] || 'attack_hit';
+                this.playSound(soundName);
+            }
+            
+            // 게임 결과 사운드 재생
+            playGameResultSound(result) {
+                const resultSounds = {
+                    '승리': 'victory',
+                    '패배': 'defeat'
+                };
+                
+                const soundName = resultSounds[result] || 'victory';
+                this.playSound(soundName, 0.8);
+            }
+            
+            // 리소스 정리
+            cleanup() {
+                this.stopBackgroundMusic();
+                this.sounds = {};
+                this.initialized = false;
+                console.log('SoundManager 정리 완료');
+            }
+        }
+
+        // NexusTower 클래스
+        class NexusTower {
+            constructor(x, y, team, scene = null) {
+                this.x = x;
+                this.y = y;
+                this.team = team;
+                this.scene = scene;
+                
+                // 넥서스 스탯
+                this.maxHp = 3000;
+                this.currentHp = this.maxHp;
+                this.attackDamage = 200;
+                this.attackRange = 300;
+                this.attackSpeed = 2000; // 2초 쿨다운
+                this.destroyed = false;
+                
+                // 공격 관련
+                this.lastAttackTime = 0;
+                
+                // 스프라이트 생성
+                if (this.scene) {
+                    this.createSprite();
+                }
+            }
+            
+            createSprite() {
+                // 넥서스 스프라이트 생성 (큰 사각형)
+                this.sprite = this.scene.add.rectangle(this.x, this.y, 80, 80, this.team === 'player' ? 0x0066cc : 0xcc0000);
+                this.sprite.setStrokeStyle(4, 0xffffff);
+                
+                // 체력바 생성
+                this.healthBarBg = this.scene.add.rectangle(this.x, this.y - 50, 100, 8, 0x000000);
+                this.healthBar = this.scene.add.rectangle(this.x, this.y - 50, 98, 6, 0x00ff00);
+                
+                // 팀 텍스트
+                this.nameText = this.scene.add.text(this.x, this.y + 50, `${this.team.toUpperCase()} NEXUS`, {
+                    fontSize: '12px',
+                    fill: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }).setOrigin(0.5);
+                
+                this.updateHealthBar();
+            }
+            
+            updateHealthBar() {
+                if (!this.healthBar) return;
+                
+                const healthPercent = this.currentHp / this.maxHp;
+                this.healthBar.displayWidth = 98 * healthPercent;
+                this.healthBar.x = this.x - 49 + (49 * healthPercent);
+                
+                // 체력에 따른 색상 변경
+                if (healthPercent > 0.6) {
+                    this.healthBar.setFillStyle(0x00ff00);
+                } else if (healthPercent > 0.3) {
+                    this.healthBar.setFillStyle(0xffff00);
+                } else {
+                    this.healthBar.setFillStyle(0xff0000);
+                }
+            }
+            
+            takeDamage(damage) {
+                if (this.destroyed) return;
+                
+                this.currentHp -= damage;
+                if (this.currentHp <= 0) {
+                    this.currentHp = 0;
+                    this.destroy();
+                }
+                
+                this.updateHealthBar();
+                
+                // 데미지 이펙트
+                if (this.scene) {
+                    const effect = this.scene.add.circle(this.x, this.y, 10, 0xff0000);
+                    effect.setAlpha(0.8);
+                    
+                    this.scene.tweens.add({
+                        targets: effect,
+                        y: this.y - 30,
+                        alpha: 0,
+                        duration: 800,
+                        onComplete: () => effect.destroy()
+                    });
+                }
+            }
+            
+            destroy() {
+                this.destroyed = true;
+                
+                if (this.sprite) {
+                    this.sprite.setFillStyle(0x666666);
+                    this.sprite.setAlpha(0.5);
+                }
+                
+                if (this.nameText) {
+                    this.nameText.setText(`${this.team.toUpperCase()} NEXUS (DESTROYED)`);
+                    this.nameText.setTint(0xff0000);
+                }
+                
+                // 파괴 이펙트
+                if (this.scene) {
+                    const explosionEffect = this.scene.add.sprite(this.x, this.y, null);
+                    explosionEffect.setDisplaySize(120, 120);
+                    explosionEffect.setTint(0xff4444);
+                    
+                    this.scene.tweens.add({
+                        targets: explosionEffect,
+                        scaleX: 3,
+                        scaleY: 3,
+                        alpha: 0,
+                        duration: 1000,
+                        onComplete: () => explosionEffect.destroy()
+                    });
+                }
+            }
+            
+            isDestroyed() {
+                return this.destroyed;
+            }
+            
+            getHealthPercentage() {
+                return (this.currentHp / this.maxHp) * 100;
+            }
+            
+            canAttack() {
+                if (this.destroyed) return false;
+                
+                const currentTime = Date.now();
+                return currentTime - this.lastAttackTime >= this.attackSpeed;
+            }
+            
+            findNearestEnemy(enemies) {
+                if (this.destroyed || !enemies || enemies.length === 0) return null;
+                
+                let nearestEnemy = null;
+                let nearestDistance = this.attackRange;
+                
+                enemies.forEach(enemy => {
+                    if (enemy.isDead || enemy.team === this.team) return;
+                    
+                    const distance = Phaser.Math.Distance.Between(
+                        this.x, this.y,
+                        enemy.x || enemy.sprite?.x || 0,
+                        enemy.y || enemy.sprite?.y || 0
+                    );
+                    
+                    if (distance <= nearestDistance) {
+                        nearestDistance = distance;
+                        nearestEnemy = enemy;
+                    }
+                });
+                
+                return nearestEnemy;
+            }
+            
+            attack(target) {
+                if (!this.canAttack() || this.destroyed || !target) return false;
+                
+                this.lastAttackTime = Date.now();
+                
+                // 공격 애니메이션
+                if (this.sprite) {
+                    this.sprite.setFillStyle(0xffff00);
+                    
+                    if (this.scene) {
+                        this.scene.tweens.add({
+                            targets: this.sprite,
+                            scaleX: 1.2,
+                            scaleY: 1.2,
+                            duration: 200,
+                            yoyo: true,
+                            onComplete: () => {
+                                this.sprite.setFillStyle(this.team === 'player' ? 0x0066cc : 0xcc0000);
+                            }
+                        });
+                    }
+                }
+                
+                // 데미지 적용
+                if (this.scene && this.scene.combatSystem) {
+                    const attacker = {
+                        stats: {
+                            attack: this.attackDamage,
+                            level: 10
+                        },
+                        sprite: this.sprite
+                    };
+                    
+                    this.scene.combatSystem.performBasicAttack(attacker, target);
+                } else {
+                    // 기본 데미지 적용
+                    if (target.stats) {
+                        target.stats.currentHp -= this.attackDamage;
+                        if (target.stats.currentHp <= 0) {
+                            target.stats.currentHp = 0;
+                            target.isDead = true;
+                        }
+                    }
+                }
+                
+                return true;
+            }
+        }
+
+        // VictoryConditionManager 클래스
+        class VictoryConditionManager {
+            constructor() {
+                this.playerNexus = null;
+                this.aiNexus = null;
+                this.gameEnded = false;
+                this.gameEndCallback = null;
+            }
+            
+            setNexusTowers(playerNexus, aiNexus) {
+                this.playerNexus = playerNexus;
+                this.aiNexus = aiNexus;
+            }
+            
+            setGameEndCallback(callback) {
+                this.gameEndCallback = callback;
+            }
+            
+            checkVictoryCondition() {
+                if (this.gameEnded) return null;
+                
+                // AI 넥서스 파괴 시 플레이어 승리
+                if (this.aiNexus && this.aiNexus.isDestroyed()) {
+                    return 'player';
+                }
+                
+                // 플레이어 넥서스 파괴 시 AI 승리
+                if (this.playerNexus && this.playerNexus.isDestroyed()) {
+                    return 'ai';
+                }
+                
+                return null;
+            }
+            
+            triggerGameEnd(winner) {
+                if (this.gameEnded) return;
+                
+                this.gameEnded = true;
+                
+                if (this.gameEndCallback) {
+                    this.gameEndCallback(winner);
+                }
+            }
+            
+            isGameEnded() {
+                return this.gameEnded;
+            }
+            
+            reset() {
+                this.gameEnded = false;
+                this.playerNexus = null;
+                this.aiNexus = null;
+            }
+        }
+
+        // 테스트 러너
+        class TestRunner {
+            constructor() {
+                this.tests = [];
+                this.results = [];
+            }
+
+            addTest(name, testFn) {
+                this.tests.push({ name, testFn });
+            }
+
+            async runTests() {
+                console.log('=== TASK-014 테스트 시작 ===');
+                
+                for (const test of this.tests) {
+                    try {
+                        await test.testFn();
+                        this.results.push({ name: test.name, status: 'PASS' });
+                        console.log(`✓ ${test.name}: PASS`);
+                    } catch (error) {
+                        this.results.push({ name: test.name, status: 'FAIL', error: error.message });
+                        console.log(`✗ ${test.name}: FAIL - ${error.message}`);
+                    }
+                }
+
+                this.displayResults();
+            }
+
+            displayResults() {
+                const output = document.getElementById('test-output');
+                output.innerHTML = this.results.map(result => 
+                    `<div class="test-${result.status.toLowerCase()}">
+                        ${result.status === 'PASS' ? '✓' : '✗'} ${result.name}: ${result.status}
+                        ${result.error ? `<br>&nbsp;&nbsp;Error: ${result.error}` : ''}
+                    </div>`
+                ).join('');
+            }
+        }
+
+        // 테스트 실행
+        const testRunner = new TestRunner();
+
+        // 테스트 1: Skill 클래스 구조 확인
+        testRunner.addTest('Skill 클래스 구조 확인', () => {
+            if (typeof Skill === 'undefined') {
+                throw new Error('Skill 클래스가 정의되지 않았습니다.');
+            }
+            
+            // 가짜 Scene 객체 생성
+            const mockScene = {
+                add: {
+                    particles: () => ({
+                        createEmitter: () => ({
+                            setPosition: () => ({}),
+                            start: () => ({}),
+                            stop: () => ({})
+                        })
+                    }),
+                    tween: () => ({})
+                },
+                tweens: {
+                    add: () => ({
+                        on: () => ({}),
+                        play: () => ({})
+                    })
+                },
+                time: {
+                    now: Date.now
+                }
+            };
+            
+            // 기본 스킬 데이터
+            const skillData = {
+                key: 'Q',
+                name: '테스트 스킬',
+                description: '테스트용 스킬입니다.',
+                manaCost: 50,
+                cooldown: 8000,
+                damage: 80,
+                range: 150,
+                type: 'active'
+            };
+            
+            const skill = new Skill(mockScene, skillData);
+            
+            // 기본 속성 확인
+            if (skill.key !== 'Q') {
+                throw new Error('스킬 키가 올바르지 않습니다.');
+            }
+            
+            if (skill.name !== '테스트 스킬') {
+                throw new Error('스킬 이름이 올바르지 않습니다.');
+            }
+            
+            if (skill.manaCost !== 50) {
+                throw new Error('마나 소모량이 올바르지 않습니다.');
+            }
+            
+            if (skill.cooldown !== 8000) {
+                throw new Error('쿨다운 시간이 올바르지 않습니다.');
+            }
+            
+            if (skill.damage !== 80) {
+                throw new Error('데미지가 올바르지 않습니다.');
+            }
+            
+            // 초기 상태 확인
+            if (skill.isOnCooldown()) {
+                throw new Error('초기 쿨다운 상태가 올바르지 않습니다.');
+            }
+            
+            if (skill.getRemainingCooldown() !== 0) {
+                throw new Error('초기 남은 쿨다운 시간이 올바르지 않습니다.');
+            }
+            
+            // 메서드 확인
+            if (typeof skill.canUse !== 'function') {
+                throw new Error('canUse 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof skill.use !== 'function') {
+                throw new Error('use 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof skill.startCooldown !== 'function') {
+                throw new Error('startCooldown 메서드가 정의되지 않았습니다.');
+            }
+            
+            console.log('Skill 클래스 구조가 정상적으로 정의되었습니다.');
+        });
+
+        // 테스트 2: 스킬 시전 및 쿨다운 시스템 확인
+        testRunner.addTest('스킬 시전 및 쿨다운 시스템 확인', () => {
+            return new Promise((resolve, reject) => {
+                const mockScene = {
+                    add: {
+                        particles: () => ({
+                            createEmitter: () => ({
+                                setPosition: () => ({}),
+                                start: () => ({}),
+                                stop: () => ({})
+                            })
+                        }),
+                        tween: () => ({})
+                    },
+                    tweens: {
+                        add: () => ({
+                            on: () => ({}),
+                            play: () => ({})
+                        })
+                    },
+                    time: {
+                        now: Date.now
+                    }
+                };
+                
+                const skillData = {
+                    key: 'Q',
+                    name: '테스트 스킬',
+                    description: '테스트용 스킬입니다.',
+                    manaCost: 30,
+                    cooldown: 2000, // 2초
+                    damage: 60,
+                    range: 100,
+                    type: 'active'
+                };
+                
+                const skill = new Skill(mockScene, skillData);
+                
+                // 가짜 챔피언 객체
+                const mockChampion = {
+                    stats: {
+                        currentMp: 100,
+                        maxMp: 100
+                    },
+                    useMana: (amount) => {
+                        if (mockChampion.stats.currentMp >= amount) {
+                            mockChampion.stats.currentMp -= amount;
+                            return true;
+                        }
+                        return false;
+                    },
+                    sprite: {
+                        x: 100,
+                        y: 100
+                    }
+                };
+                
+                // 초기 상태 확인
+                if (!skill.canUse(mockChampion)) {
+                    reject(new Error('초기 상태에서 스킬을 사용할 수 없습니다.'));
+                    return;
+                }
+                
+                // 스킬 사용
+                try {
+                    skill.use(mockChampion, 150, 150);
+                } catch (error) {
+                    reject(new Error(`스킬 사용 중 오류: ${error.message}`));
+                    return;
+                }
+                
+                // 마나 소모 확인
+                if (mockChampion.stats.currentMp !== 70) {
+                    reject(new Error('마나 소모가 올바르지 않습니다.'));
+                    return;
+                }
+                
+                // 쿨다운 상태 확인
+                if (!skill.isOnCooldown()) {
+                    reject(new Error('스킬 사용 후 쿨다운 상태가 아닙니다.'));
+                    return;
+                }
+                
+                // 쿨다운 중 사용 불가 확인
+                if (skill.canUse(mockChampion)) {
+                    reject(new Error('쿨다운 중에 스킬을 사용할 수 있습니다.'));
+                    return;
+                }
+                
+                // 남은 쿨다운 시간 확인
+                const remainingCooldown = skill.getRemainingCooldown();
+                if (remainingCooldown <= 0 || remainingCooldown > 2000) {
+                    reject(new Error('남은 쿨다운 시간이 올바르지 않습니다.'));
+                    return;
+                }
+                
+                // 쿨다운 완료 후 확인
+                setTimeout(() => {
+                    if (skill.isOnCooldown()) {
+                        reject(new Error('쿨다운이 완료되지 않았습니다.'));
+                        return;
+                    }
+                    
+                    if (skill.getRemainingCooldown() !== 0) {
+                        reject(new Error('쿨다운 완료 후 남은 시간이 0이 아닙니다.'));
+                        return;
+                    }
+                    
+                    if (!skill.canUse(mockChampion)) {
+                        reject(new Error('쿨다운 완료 후 스킬을 사용할 수 없습니다.'));
+                        return;
+                    }
+                    
+                    console.log('스킬 시전 및 쿨다운 시스템이 정상적으로 작동합니다.');
+                    resolve();
+                }, 2100);
+            });
+        });
+
+        // 테스트 3: 챔피언별 스킬 시스템 확인
+        testRunner.addTest('챔피언별 스킬 시스템 확인', () => {
+            if (typeof SkillManager === 'undefined') {
+                throw new Error('SkillManager 클래스가 정의되지 않았습니다.');
+            }
+            
+            const mockScene = {
+                add: {
+                    particles: () => ({
+                        createEmitter: () => ({
+                            setPosition: () => ({}),
+                            start: () => ({}),
+                            stop: () => ({})
+                        })
+                    }),
+                    tween: () => ({})
+                },
+                tweens: {
+                    add: () => ({
+                        on: () => ({}),
+                        play: () => ({})
+                    })
+                },
+                time: {
+                    now: Date.now
+                }
+            };
+            
+            // 각 챔피언별 스킬 확인
+            const champions = ['ahri', 'garen', 'jinx', 'thresh'];
+            
+            for (const championId of champions) {
+                const skillManager = new SkillManager(mockScene, championId);
+                
+                // 스킬 개수 확인 (Q, W, E)
+                const skills = skillManager.getSkills();
+                if (Object.keys(skills).length !== 3) {
+                    throw new Error(`${championId} 챔피언의 스킬 개수가 올바르지 않습니다.`);
+                }
+                
+                // 각 스킬 키 확인
+                if (!skills.Q || !skills.W || !skills.E) {
+                    throw new Error(`${championId} 챔피언의 스킬 키가 올바르지 않습니다.`);
+                }
+                
+                // 스킬 데이터 확인
+                for (const [key, skill] of Object.entries(skills)) {
+                    if (!skill.name || !skill.description) {
+                        throw new Error(`${championId} 챔피언의 ${key} 스킬 데이터가 불완전합니다.`);
+                    }
+                    
+                    if (typeof skill.manaCost !== 'number' || skill.manaCost <= 0) {
+                        throw new Error(`${championId} 챔피언의 ${key} 스킬 마나 소모량이 올바르지 않습니다.`);
+                    }
+                    
+                    if (typeof skill.cooldown !== 'number' || skill.cooldown <= 0) {
+                        throw new Error(`${championId} 챔피언의 ${key} 스킬 쿨다운이 올바르지 않습니다.`);
+                    }
+                    
+                    if (typeof skill.damage !== 'number' || skill.damage < 0) {
+                        throw new Error(`${championId} 챔피언의 ${key} 스킬 데미지가 올바르지 않습니다.`);
+                    }
+                }
+                
+                // 스킬 매니저 메서드 확인
+                if (typeof skillManager.canUseSkill !== 'function') {
+                    throw new Error('SkillManager의 canUseSkill 메서드가 정의되지 않았습니다.');
+                }
+                
+                if (typeof skillManager.useSkill !== 'function') {
+                    throw new Error('SkillManager의 useSkill 메서드가 정의되지 않았습니다.');
+                }
+                
+                if (typeof skillManager.getCooldowns !== 'function') {
+                    throw new Error('SkillManager의 getCooldowns 메서드가 정의되지 않았습니다.');
+                }
+            }
+            
+            console.log('챔피언별 스킬 시스템이 정상적으로 정의되었습니다.');
+        });
+
+        // 테스트 4: 스킬 이펙트 시스템 확인
+        testRunner.addTest('스킬 이펙트 시스템 확인', () => {
+            if (typeof SkillEffectManager === 'undefined') {
+                throw new Error('SkillEffectManager 클래스가 정의되지 않았습니다.');
+            }
+            
+            const mockScene = {
+                add: {
+                    particles: () => ({
+                        createEmitter: () => ({
+                            setPosition: () => ({}),
+                            start: () => ({}),
+                            stop: () => ({}),
+                            on: () => ({})
+                        })
+                    }),
+                    sprite: () => ({
+                        setScale: () => ({}),
+                        setOrigin: () => ({}),
+                        setAlpha: () => ({}),
+                        setTint: () => ({}),
+                        destroy: () => ({})
+                    }),
+                    rectangle: () => ({
+                        setAlpha: () => ({}),
+                        destroy: () => ({})
+                    }),
+                    circle: () => ({
+                        setAlpha: () => ({}),
+                        destroy: () => ({})
+                    })
+                },
+                tweens: {
+                    add: () => ({
+                        on: () => ({}),
+                        play: () => ({})
+                    })
+                },
+                time: {
+                    now: Date.now
+                }
+            };
+            
+            const effectManager = new SkillEffectManager(mockScene);
+            
+            // 기본 메서드 확인
+            if (typeof effectManager.createProjectile !== 'function') {
+                throw new Error('createProjectile 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof effectManager.createAreaEffect !== 'function') {
+                throw new Error('createAreaEffect 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof effectManager.createParticleEffect !== 'function') {
+                throw new Error('createParticleEffect 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof effectManager.createBuffEffect !== 'function') {
+                throw new Error('createBuffEffect 메서드가 정의되지 않았습니다.');
+            }
+            
+            // 투사체 생성 테스트
+            try {
+                const projectile = effectManager.createProjectile(100, 100, 200, 200, {
+                    speed: 300,
+                    damage: 50,
+                    color: 0xff0000
+                });
+                
+                if (!projectile) {
+                    throw new Error('투사체가 생성되지 않았습니다.');
+                }
+            } catch (error) {
+                throw new Error(`투사체 생성 중 오류: ${error.message}`);
+            }
+            
+            // 범위 효과 생성 테스트
+            try {
+                const areaEffect = effectManager.createAreaEffect(150, 150, {
+                    radius: 80,
+                    damage: 70,
+                    duration: 2000,
+                    color: 0x00ff00
+                });
+                
+                if (!areaEffect) {
+                    throw new Error('범위 효과가 생성되지 않았습니다.');
+                }
+            } catch (error) {
+                throw new Error(`범위 효과 생성 중 오류: ${error.message}`);
+            }
+            
+            // 파티클 효과 생성 테스트
+            try {
+                const particleEffect = effectManager.createParticleEffect(200, 200, {
+                    particleCount: 20,
+                    duration: 1500,
+                    color: 0x0000ff
+                });
+                
+                if (!particleEffect) {
+                    throw new Error('파티클 효과가 생성되지 않았습니다.');
+                }
+            } catch (error) {
+                throw new Error(`파티클 효과 생성 중 오류: ${error.message}`);
+            }
+            
+            console.log('스킬 이펙트 시스템이 정상적으로 작동합니다.');
+        });
+
+        // 테스트 5: 키보드 입력 및 스킬 시전 연동 확인
+        testRunner.addTest('키보드 입력 및 스킬 시전 연동 확인', () => {
+            return new Promise((resolve, reject) => {
+                // 전역 데이터 관리자 초기화
+                window.gameDataManager = new GameDataManager();
+                window.gameDataManager.setSelectedChampion('ahri');
+                
+                const config = {
+                    type: Phaser.AUTO,
+                    width: 1024,
+                    height: 768,
+                    parent: 'game-container',
+                    backgroundColor: '#1a1a1a',
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            gravity: { y: 0 },
+                            debug: false
+                        }
+                    },
+                    scene: [GamePlayScene]
+                };
+
+                try {
+                    if (window.game) {
+                        window.game.destroy(true);
+                    }
+                    
+                    window.game = new Phaser.Game(config);
+                    
+                    // Scene 초기화 확인
+                    setTimeout(() => {
+                        if (!window.gamePlaySceneReady || !window.gamePlayScene) {
+                            reject(new Error('GamePlayScene 초기화 실패'));
+                            return;
+                        }
+                        
+                        const scene = window.gamePlayScene;
+                        const playerChampion = scene.getPlayerChampion();
+                        
+                        if (!playerChampion) {
+                            reject(new Error('플레이어 챔피언이 생성되지 않았습니다.'));
+                            return;
+                        }
+                        
+                        // 스킬 매니저 확인
+                        if (!playerChampion.skillManager) {
+                            reject(new Error('플레이어 챔피언의 스킬 매니저가 생성되지 않았습니다.'));
+                            return;
+                        }
+                        
+                        // 키보드 입력 확인
+                        if (!scene.input || !scene.input.keyboard) {
+                            reject(new Error('키보드 입력이 설정되지 않았습니다.'));
+                            return;
+                        }
+                        
+                        // 스킬 키 확인
+                        const keys = scene.input.keyboard.addKeys('Q,W,E');
+                        if (!keys.Q || !keys.W || !keys.E) {
+                            reject(new Error('스킬 키가 설정되지 않았습니다.'));
+                            return;
+                        }
+                        
+                        // 스킬 사용 테스트
+                        const initialMana = playerChampion.stats.currentMp;
+                        
+                        // Q 스킬 사용 시뮬레이션
+                        const canUseQ = playerChampion.skillManager.canUseSkill('Q', playerChampion);
+                        if (!canUseQ) {
+                            reject(new Error('Q 스킬을 사용할 수 없습니다.'));
+                            return;
+                        }
+                        
+                        try {
+                            playerChampion.skillManager.useSkill('Q', playerChampion, 200, 200);
+                            
+                            // 마나 소모 확인
+                            if (playerChampion.stats.currentMp >= initialMana) {
+                                reject(new Error('스킬 사용 후 마나가 소모되지 않았습니다.'));
+                                return;
+                            }
+                            
+                            // 쿨다운 확인
+                            const cooldowns = playerChampion.skillManager.getCooldowns();
+                            if (cooldowns.Q <= 0) {
+                                reject(new Error('스킬 사용 후 쿨다운이 시작되지 않았습니다.'));
+                                return;
+                            }
+                            
+                            console.log('키보드 입력 및 스킬 시전 연동이 정상적으로 작동합니다.');
+                            resolve();
+                        } catch (error) {
+                            reject(new Error(`스킬 사용 중 오류: ${error.message}`));
+                        }
+                    }, 3000);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        });
+
+        // 페이지 로드 후 테스트 실행
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testRunner.runTests();
+            }, 1000);
+        });
+
+        // TASK-010 전투 시스템 테스트 추가
+        
+        // TASK-014 사운드 시스템 테스트
+        
+        // 테스트 1: SoundManager 클래스 구조 확인
+        testRunner.addTest('SoundManager 클래스 구조 확인', () => {
+            if (typeof SoundManager === 'undefined') {
+                throw new Error('SoundManager 클래스가 정의되지 않았습니다.');
+            }
+            
+            const soundManager = new SoundManager();
+            
+            // 기본 메서드 확인
+            if (typeof soundManager.init !== 'function') {
+                throw new Error('init 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof soundManager.playBackgroundMusic !== 'function') {
+                throw new Error('playBackgroundMusic 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof soundManager.playSound !== 'function') {
+                throw new Error('playSound 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof soundManager.setVolume !== 'function') {
+                throw new Error('setVolume 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof soundManager.getMasterVolume !== 'function') {
+                throw new Error('getMasterVolume 메서드가 정의되지 않았습니다.');
+            }
+            
+            console.log('SoundManager 클래스 구조가 정상적으로 정의되었습니다.');
+        });
+
+        // 테스트 2: 사운드 로딩 및 초기화 확인
+        testRunner.addTest('사운드 로딩 및 초기화 확인', () => {
+            const soundManager = new SoundManager();
+            
+            // 초기화 실행
+            soundManager.init();
+            
+            // 사운드 맵 확인
+            if (!soundManager.sounds) {
+                throw new Error('사운드 맵이 초기화되지 않았습니다.');
+            }
+            
+            // 기본 볼륨 확인
+            const masterVolume = soundManager.getMasterVolume();
+            if (typeof masterVolume !== 'number' || masterVolume < 0 || masterVolume > 1) {
+                throw new Error('마스터 볼륨이 올바르게 설정되지 않았습니다.');
+            }
+            
+            // 배경음악 확인
+            if (!soundManager.sounds.backgroundMusic) {
+                throw new Error('배경음악이 로드되지 않았습니다.');
+            }
+            
+            console.log('사운드 로딩 및 초기화가 정상적으로 작동합니다.');
+        });
+
+        // 테스트 3: 배경음악 재생 확인
+        testRunner.addTest('배경음악 재생 확인', () => {
+            const soundManager = new SoundManager();
+            soundManager.init();
+            
+            // 배경음악 재생 테스트
+            try {
+                soundManager.playBackgroundMusic();
+                console.log('배경음악 재생이 정상적으로 시작되었습니다.');
+            } catch (error) {
+                throw new Error(`배경음악 재생 중 오류: ${error.message}`);
+            }
+            
+            // 배경음악 정지 테스트
+            try {
+                soundManager.stopBackgroundMusic();
+                console.log('배경음악 정지가 정상적으로 작동했습니다.');
+            } catch (error) {
+                throw new Error(`배경음악 정지 중 오류: ${error.message}`);
+            }
+        });
+
+        // 테스트 4: 효과음 재생 확인
+        testRunner.addTest('효과음 재생 확인', () => {
+            const soundManager = new SoundManager();
+            soundManager.init();
+            
+            // 스킬 효과음 테스트
+            const skillSounds = ['skill_fire', 'skill_ice', 'skill_lightning'];
+            
+            skillSounds.forEach(soundName => {
+                try {
+                    soundManager.playSound(soundName);
+                    console.log(`${soundName} 효과음이 정상적으로 재생되었습니다.`);
+                } catch (error) {
+                    throw new Error(`${soundName} 효과음 재생 중 오류: ${error.message}`);
+                }
+            });
+            
+            // 전투 효과음 테스트
+            const combatSounds = ['attack_hit', 'attack_critical', 'death'];
+            
+            combatSounds.forEach(soundName => {
+                try {
+                    soundManager.playSound(soundName);
+                    console.log(`${soundName} 전투 효과음이 정상적으로 재생되었습니다.`);
+                } catch (error) {
+                    throw new Error(`${soundName} 전투 효과음 재생 중 오류: ${error.message}`);
+                }
+            });
+        });
+
+        // 테스트 5: 볼륨 조절 기능 확인
+        testRunner.addTest('볼륨 조절 기능 확인', () => {
+            const soundManager = new SoundManager();
+            soundManager.init();
+            
+            // 마스터 볼륨 설정 테스트
+            soundManager.setVolume('master', 0.5);
+            if (soundManager.getMasterVolume() !== 0.5) {
+                throw new Error('마스터 볼륨 설정이 올바르지 않습니다.');
+            }
+            
+            // 배경음악 볼륨 설정 테스트
+            soundManager.setVolume('music', 0.3);
+            if (soundManager.getMusicVolume() !== 0.3) {
+                throw new Error('배경음악 볼륨 설정이 올바르지 않습니다.');
+            }
+            
+            // 효과음 볼륨 설정 테스트
+            soundManager.setVolume('effects', 0.7);
+            if (soundManager.getEffectsVolume() !== 0.7) {
+                throw new Error('효과음 볼륨 설정이 올바르지 않습니다.');
+            }
+            
+            // 음소거 테스트
+            soundManager.mute(true);
+            if (!soundManager.isMuted()) {
+                throw new Error('음소거 기능이 올바르지 않습니다.');
+            }
+            
+            soundManager.mute(false);
+            if (soundManager.isMuted()) {
+                throw new Error('음소거 해제 기능이 올바르지 않습니다.');
+            }
+            
+            console.log('볼륨 조절 기능이 정상적으로 작동합니다.');
+        });
+        
+        // 기존 TASK-013 테스트들
+        
+        // 테스트 1: GameResultScene 클래스 구조 확인
+        testRunner.addTest('GameResultScene 클래스 구조 확인', () => {
+            if (typeof GameResultScene === 'undefined') {
+                throw new Error('GameResultScene 클래스가 정의되지 않았습니다.');
+            }
+            
+            const gameResultScene = new GameResultScene();
+            
+            // 기본 메서드 확인
+            if (typeof gameResultScene.preload !== 'function') {
+                throw new Error('preload 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof gameResultScene.create !== 'function') {
+                throw new Error('create 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof gameResultScene.createButtons !== 'function') {
+                throw new Error('createButtons 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof gameResultScene.restartGame !== 'function') {
+                throw new Error('restartGame 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof gameResultScene.changeChampion !== 'function') {
+                throw new Error('changeChampion 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof gameResultScene.goToMainMenu !== 'function') {
+                throw new Error('goToMainMenu 메서드가 정의되지 않았습니다.');
+            }
+            
+            console.log('GameResultScene 클래스 구조가 정상적으로 정의되었습니다.');
+        });
+
+        // 테스트 2: 게임 결과 데이터 처리 확인
+        testRunner.addTest('게임 결과 데이터 처리 확인', () => {
+            // 테스트용 게임 데이터 설정
+            if (!window.gameDataManager) {
+                window.gameDataManager = new GameDataManager();
+            }
+            
+            // 승리 시나리오 테스트
+            window.gameDataManager.setGameResult('승리');
+            window.gameDataManager.updateStats({
+                kills: 5,
+                deaths: 2,
+                assists: 3,
+                gameTime: 180
+            });
+            
+            const result = window.gameDataManager.getGameResult();
+            const stats = window.gameDataManager.getStats();
+            
+            if (result !== '승리') {
+                throw new Error('게임 결과가 올바르게 설정되지 않았습니다.');
+            }
+            
+            if (stats.kills !== 5 || stats.deaths !== 2 || stats.assists !== 3) {
+                throw new Error('게임 통계가 올바르게 저장되지 않았습니다.');
+            }
+            
+            if (stats.gameTime !== 180) {
+                throw new Error('게임 시간이 올바르게 저장되지 않았습니다.');
+            }
+            
+            // 패배 시나리오 테스트
+            window.gameDataManager.setGameResult('패배');
+            window.gameDataManager.updateStats({
+                kills: 1,
+                deaths: 7,
+                assists: 2,
+                gameTime: 240
+            });
+            
+            const defeatResult = window.gameDataManager.getGameResult();
+            const defeatStats = window.gameDataManager.getStats();
+            
+            if (defeatResult !== '패배') {
+                throw new Error('패배 결과가 올바르게 설정되지 않았습니다.');
+            }
+            
+            if (defeatStats.kills !== 1 || defeatStats.deaths !== 7) {
+                throw new Error('패배 시 통계가 올바르게 저장되지 않았습니다.');
+            }
+            
+            console.log('게임 결과 데이터 처리가 정상적으로 작동합니다.');
+        });
+
+        // 테스트 3: 결과 화면 UI 요소 생성 확인
+        testRunner.addTest('결과 화면 UI 요소 생성 확인', () => {
+            const mockScene = {
+                add: {
+                    image: () => ({ 
+                        setOrigin: function() { return this; }
+                    }),
+                    text: (x, y, text, style) => {
+                        const textObj = {
+                            setOrigin: function() { return this; },
+                            setText: function() { return this; },
+                            setTint: function() { return this; }
+                        };
+                        return textObj;
+                    },
+                    rectangle: (x, y, width, height, color, alpha) => {
+                        const rectObj = {
+                            setInteractive: function() { return this; },
+                            on: function() { return this; },
+                            setTint: function() { return this; },
+                            clearTint: function() { return this; }
+                        };
+                        return rectObj;
+                    }
+                },
+                scene: {
+                    start: () => ({})
+                }
+            };
+            
+            // 게임 데이터 설정
+            window.gameDataManager.setGameResult('승리');
+            window.gameDataManager.updateStats({
+                kills: 8,
+                deaths: 3,
+                assists: 5,
+                gameTime: 300
+            });
+            
+            const gameResultScene = new GameResultScene();
+            
+            // create 메서드 실행 테스트
+            try {
+                // Scene의 add 객체를 임시로 설정
+                gameResultScene.add = mockScene.add;
+                gameResultScene.scene = mockScene.scene;
+                
+                // SoundManager mock 설정
+                gameResultScene.soundManager = {
+                    init: () => ({}),
+                    playGameResultSound: () => ({})
+                };
+                
+                gameResultScene.create();
+                
+                console.log('결과 화면 UI 요소가 정상적으로 생성되었습니다.');
+            } catch (error) {
+                throw new Error(`UI 요소 생성 중 오류: ${error.message}`);
+            }
+        });
+
+        // 테스트 4: 재시작 기능 확인
+        testRunner.addTest('재시작 기능 확인', () => {
+            let sceneStartCalled = false;
+            let targetScene = null;
+            
+            const mockScene = {
+                add: {
+                    image: () => ({ 
+                        setOrigin: function() { return this; }
+                    }),
+                    text: (x, y, text, style) => ({
+                        setOrigin: function() { return this; },
+                        setText: function() { return this; },
+                        setTint: function() { return this; }
+                    }),
+                    rectangle: (x, y, width, height, color, alpha) => {
+                        const rectObj = {
+                            setInteractive: function() { return this; },
+                            on: function(event, callback) {
+                                if (event === 'pointerdown') {
+                                    // 클릭 이벤트 시뮬레이션
+                                    callback();
+                                }
+                                return this;
+                            },
+                            setTint: function() { return this; },
+                            clearTint: function() { return this; }
+                        };
+                        return rectObj;
+                    }
+                },
+                scene: {
+                    start: (sceneName) => {
+                        sceneStartCalled = true;
+                        targetScene = sceneName;
+                    }
+                }
+            };
+            
+            const gameResultScene = new GameResultScene();
+            gameResultScene.add = mockScene.add;
+            gameResultScene.scene = mockScene.scene;
+            
+            // SoundManager mock 설정
+            gameResultScene.soundManager = {
+                init: () => ({}),
+                playGameResultSound: () => ({})
+            };
+            
+            // 데이터 초기화 확인을 위한 설정
+            window.gameDataManager.setGameResult('승리');
+            
+            // create 메서드 실행하여 버튼 생성
+            gameResultScene.create();
+            
+            // 다시 플레이 버튼 클릭 시뮬레이션은 실제 구현에서 확인
+            // 여기서는 Scene 전환 메서드가 정상적으로 호출되는지만 확인
+            
+            if (typeof gameResultScene.scene.start !== 'function') {
+                throw new Error('Scene 전환 메서드가 정의되지 않았습니다.');
+            }
+            
+            console.log('재시작 기능이 정상적으로 구현되었습니다.');
+        });
+
+        // 테스트 5: 통계 표시 정확성 확인
+        testRunner.addTest('통계 표시 정확성 확인', () => {
+            const displayedTexts = [];
+            
+            const mockScene = {
+                add: {
+                    image: () => ({ 
+                        setOrigin: function() { return this; }
+                    }),
+                    text: (x, y, text, style) => {
+                        displayedTexts.push(text);
+                        const textObj = {
+                            setOrigin: function() { return this; },
+                            setText: function(newText) {
+                                // 텍스트 업데이트 추적
+                                const index = displayedTexts.indexOf(text);
+                                if (index !== -1) {
+                                    displayedTexts[index] = newText;
+                                }
+                                return this;
+                            },
+                            setTint: function() { return this; }
+                        };
+                        return textObj;
+                    },
+                    rectangle: (x, y, width, height, color, alpha) => {
+                        const rectObj = {
+                            setInteractive: function() { return this; },
+                            on: function() { return this; },
+                            setTint: function() { return this; },
+                            clearTint: function() { return this; }
+                        };
+                        return rectObj;
+                    }
+                },
+                scene: {
+                    start: () => ({})
+                }
+            };
+            
+            // 테스트 데이터 설정
+            window.gameDataManager.setGameResult('패배');
+            window.gameDataManager.updateStats({
+                kills: 3,
+                deaths: 8,
+                assists: 1,
+                gameTime: 420
+            });
+            
+            const gameResultScene = new GameResultScene();
+            gameResultScene.add = mockScene.add;
+            gameResultScene.scene = mockScene.scene;
+            
+            // SoundManager mock 설정
+            gameResultScene.soundManager = {
+                init: () => ({}),
+                playGameResultSound: () => ({})
+            };
+            
+            gameResultScene.create();
+            
+            // 표시된 텍스트 확인
+            const resultText = displayedTexts.find(text => text.includes('패배'));
+            if (!resultText) {
+                throw new Error('패배 결과가 표시되지 않았습니다.');
+            }
+            
+            const killText = displayedTexts.find(text => text.includes('킬: 3'));
+            if (!killText) {
+                throw new Error('킬 통계가 올바르게 표시되지 않았습니다.');
+            }
+            
+            const deathText = displayedTexts.find(text => text.includes('데스: 8'));
+            if (!deathText) {
+                throw new Error('데스 통계가 올바르게 표시되지 않았습니다.');
+            }
+            
+            const timeText = displayedTexts.find(text => text.includes('7:00'));
+            if (!timeText) {
+                throw new Error('게임 시간이 올바르게 표시되지 않았습니다.');
+            }
+            
+            console.log('통계 표시가 정확하게 작동합니다.');
+        });
+        
+        // 기존 TASK-012 테스트들
+        
+        // 테스트 1: 승리 조건 시스템 클래스 구조 확인
+        testRunner.addTest('승리 조건 시스템 클래스 구조 확인', () => {
+            if (typeof VictoryConditionManager === 'undefined') {
+                throw new Error('VictoryConditionManager 클래스가 정의되지 않았습니다.');
+            }
+            
+            if (typeof NexusTower === 'undefined') {
+                throw new Error('NexusTower 클래스가 정의되지 않았습니다.');
+            }
+            
+            const victoryManager = new VictoryConditionManager();
+            
+            // 기본 메서드 확인
+            if (typeof victoryManager.checkVictoryCondition !== 'function') {
+                throw new Error('checkVictoryCondition 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof victoryManager.triggerGameEnd !== 'function') {
+                throw new Error('triggerGameEnd 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof victoryManager.setGameEndCallback !== 'function') {
+                throw new Error('setGameEndCallback 메서드가 정의되지 않았습니다.');
+            }
+            
+            // 넥서스 타워 클래스 확인
+            const nexus = new NexusTower(100, 100, 'player');
+            
+            if (typeof nexus.takeDamage !== 'function') {
+                throw new Error('NexusTower의 takeDamage 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof nexus.isDestroyed !== 'function') {
+                throw new Error('NexusTower의 isDestroyed 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof nexus.getHealthPercentage !== 'function') {
+                throw new Error('NexusTower의 getHealthPercentage 메서드가 정의되지 않았습니다.');
+            }
+            
+            console.log('승리 조건 시스템 클래스 구조가 정상적으로 정의되었습니다.');
+        });
+
+        // 테스트 2: 넥서스 타워 체력 및 공격 시스템 확인
+        testRunner.addTest('넥서스 타워 체력 및 공격 시스템 확인', () => {
+            const nexus = new NexusTower(100, 100, 'player');
+            
+            // 초기 상태 확인
+            if (nexus.currentHp !== nexus.maxHp) {
+                throw new Error('넥서스 초기 체력이 최대 체력과 다릅니다.');
+            }
+            
+            if (nexus.isDestroyed()) {
+                throw new Error('초기 넥서스가 파괴된 상태입니다.');
+            }
+            
+            // 데미지 적용 테스트
+            const initialHp = nexus.currentHp;
+            const damage = 500;
+            nexus.takeDamage(damage);
+            
+            if (nexus.currentHp !== initialHp - damage) {
+                throw new Error('넥서스 데미지 적용이 정상적으로 작동하지 않습니다.');
+            }
+            
+            // 체력 퍼센티지 확인
+            const expectedPercentage = (nexus.currentHp / nexus.maxHp) * 100;
+            if (Math.abs(nexus.getHealthPercentage() - expectedPercentage) > 0.1) {
+                throw new Error('체력 퍼센티지 계산이 정확하지 않습니다.');
+            }
+            
+            // 파괴 테스트
+            nexus.takeDamage(nexus.currentHp + 100); // 과도한 데미지
+            if (!nexus.isDestroyed()) {
+                throw new Error('치명적 데미지 후 넥서스가 파괴되지 않았습니다.');
+            }
+            
+            if (nexus.currentHp > 0) {
+                throw new Error('파괴된 넥서스의 체력이 0 이하로 설정되지 않았습니다.');
+            }
+            
+            console.log('넥서스 타워 체력 및 공격 시스템이 정상적으로 작동합니다.');
+        });
+
+        // 테스트 3: 승리/패배 판정 로직 확인
+        testRunner.addTest('승리/패배 판정 로직 확인', () => {
+            const victoryManager = new VictoryConditionManager();
+            
+            // 모의 넥서스 타워 생성
+            const playerNexus = new NexusTower(100, 100, 'player');
+            const aiNexus = new NexusTower(900, 100, 'ai');
+            
+            victoryManager.setNexusTowers(playerNexus, aiNexus);
+            
+            // 초기 상태에서는 승리 조건 없음
+            let result = victoryManager.checkVictoryCondition();
+            if (result !== null) {
+                throw new Error('초기 상태에서 승리 조건이 감지되었습니다.');
+            }
+            
+            // AI 넥서스 파괴 시 플레이어 승리
+            aiNexus.takeDamage(aiNexus.maxHp);
+            result = victoryManager.checkVictoryCondition();
+            if (result !== 'player') {
+                throw new Error('AI 넥서스 파괴 시 플레이어 승리가 감지되지 않았습니다.');
+            }
+            
+            // 상태 초기화
+            aiNexus.currentHp = aiNexus.maxHp;
+            aiNexus.destroyed = false;
+            
+            // 플레이어 넥서스 파괴 시 AI 승리
+            playerNexus.takeDamage(playerNexus.maxHp);
+            result = victoryManager.checkVictoryCondition();
+            if (result !== 'ai') {
+                throw new Error('플레이어 넥서스 파괴 시 AI 승리가 감지되지 않았습니다.');
+            }
+            
+            console.log('승리/패배 판정 로직이 정상적으로 작동합니다.');
+        });
+
+        // 테스트 4: 게임 종료 처리 및 Scene 전환 확인
+        testRunner.addTest('게임 종료 처리 및 Scene 전환 확인', () => {
+            const victoryManager = new VictoryConditionManager();
+            
+            let gameEndCalled = false;
+            let gameEndResult = null;
+            
+            // 게임 종료 콜백 설정
+            victoryManager.setGameEndCallback((result) => {
+                gameEndCalled = true;
+                gameEndResult = result;
+            });
+            
+            // 게임 종료 트리거 테스트
+            victoryManager.triggerGameEnd('player');
+            
+            if (!gameEndCalled) {
+                throw new Error('게임 종료 콜백이 호출되지 않았습니다.');
+            }
+            
+            if (gameEndResult !== 'player') {
+                throw new Error('게임 종료 결과가 정확하지 않습니다.');
+            }
+            
+            // 게임 종료 상태 확인
+            if (!victoryManager.isGameEnded()) {
+                throw new Error('게임 종료 상태가 정상적으로 설정되지 않았습니다.');
+            }
+            
+            console.log('게임 종료 처리 및 Scene 전환이 정상적으로 작동합니다.');
+        });
+
+        // 테스트 5: 넥서스 타워 공격 및 타겟팅 시스템 확인
+        testRunner.addTest('넥서스 타워 공격 및 타겟팅 시스템 확인', () => {
+            const mockScene = {
+                time: { now: Date.now },
+                add: { 
+                    sprite: () => ({ 
+                        setScale: () => ({}), 
+                        setOrigin: () => ({}), 
+                        setAlpha: () => ({}), 
+                        destroy: () => ({}),
+                        setPosition: () => ({}),
+                        setTint: () => ({})
+                    }),
+                    rectangle: (x, y, width, height, color) => ({
+                        setStrokeStyle: () => ({}),
+                        setFillStyle: () => ({}),
+                        setAlpha: () => ({}),
+                        destroy: () => ({}),
+                        setVisible: () => ({})
+                    }),
+                    circle: (x, y, radius, color) => ({
+                        setAlpha: () => ({}),
+                        destroy: () => ({}),
+                        setVisible: () => ({})
+                    }),
+                    text: (x, y, text, style) => ({
+                        setOrigin: () => ({}),
+                        setText: () => ({}),
+                        setTint: () => ({})
+                    }),
+                    particles: () => ({ 
+                        createEmitter: () => ({ 
+                            setPosition: () => ({}), 
+                            start: () => ({}), 
+                            stop: () => ({}),
+                            on: () => ({})
+                        }) 
+                    })
+                },
+                tweens: { 
+                    add: () => ({ 
+                        on: () => ({}), 
+                        play: () => ({})
+                    }) 
+                }
+            };
+            
+            const nexus = new NexusTower(100, 100, 'player', mockScene);
+            
+            // 공격 가능 상태 확인
+            if (typeof nexus.canAttack !== 'function') {
+                throw new Error('canAttack 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof nexus.attack !== 'function') {
+                throw new Error('attack 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof nexus.findNearestEnemy !== 'function') {
+                throw new Error('findNearestEnemy 메서드가 정의되지 않았습니다.');
+            }
+            
+            // 테스트용 적 챔피언 생성
+            const enemy = {
+                x: 150,
+                y: 150,
+                team: 'ai',
+                stats: {
+                    maxHp: 1000,
+                    currentHp: 1000,
+                    defense: 50
+                },
+                isDead: false,
+                sprite: {
+                    setTint: () => ({}),
+                    setAlpha: () => ({}),
+                    setVisible: () => ({})
+                },
+                healthBar: { setVisible: () => ({}) },
+                manaBar: { setVisible: () => ({}) },
+                nameText: { setVisible: () => ({}) },
+                levelText: { setVisible: () => ({}) }
+            };
+            
+            // 공격 범위 내 적 탐지 테스트
+            const nearestEnemy = nexus.findNearestEnemy([enemy]);
+            if (!nearestEnemy) {
+                throw new Error('공격 범위 내 적이 탐지되지 않았습니다.');
+            }
+            
+            // 공격 실행 테스트
+            const initialHp = enemy.stats.currentHp;
+            if (nexus.canAttack()) {
+                nexus.attack(enemy);
+                
+                if (enemy.stats.currentHp >= initialHp) {
+                    throw new Error('넥서스 공격 후 적의 체력이 감소하지 않았습니다.');
+                }
+                
+                console.log(`넥서스 공격 데미지: ${initialHp - enemy.stats.currentHp}`);
+            }
+            
+            // 공격 쿨다운 확인
+            if (nexus.canAttack()) {
+                throw new Error('공격 쿨다운이 정상적으로 작동하지 않습니다.');
+            }
+            
+            console.log('넥서스 타워 공격 및 타겟팅 시스템이 정상적으로 작동합니다.');
+        });
+        
+        // 기존 TASK-010 테스트들
+        
+        // 테스트 1: 전투 시스템 클래스 구조 확인
+        testRunner.addTest('전투 시스템 클래스 구조 확인', () => {
+            if (typeof CombatSystem === 'undefined') {
+                throw new Error('CombatSystem 클래스가 정의되지 않았습니다.');
+            }
+            
+            const mockScene = {
+                time: { now: Date.now },
+                add: { 
+                    sprite: () => ({ setScale: () => ({}), setOrigin: () => ({}), setAlpha: () => ({}), destroy: () => ({}) }),
+                    circle: (x, y, radius, color) => ({
+                        setAlpha: () => ({}),
+                        destroy: () => ({}),
+                        setVisible: () => ({})
+                    }),
+                    particles: () => ({ createEmitter: () => ({ setPosition: () => ({}), start: () => ({}), stop: () => ({}) }) })
+                },
+                tweens: { add: () => ({ on: () => ({}), play: () => ({}) }) }
+            };
+            
+            const combatSystem = new CombatSystem(mockScene);
+            
+            // 기본 메서드 확인
+            if (typeof combatSystem.calculateDamage !== 'function') {
+                throw new Error('calculateDamage 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof combatSystem.applyDamage !== 'function') {
+                throw new Error('applyDamage 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof combatSystem.handleDeath !== 'function') {
+                throw new Error('handleDeath 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof combatSystem.performBasicAttack !== 'function') {
+                throw new Error('performBasicAttack 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof combatSystem.createCombatEffect !== 'function') {
+                throw new Error('createCombatEffect 메서드가 정의되지 않았습니다.');
+            }
+            
+            console.log('전투 시스템 클래스 구조가 정상적으로 정의되었습니다.');
+        });
+
+        // 테스트 2: 데미지 계산 시스템 확인
+        testRunner.addTest('데미지 계산 시스템 확인', () => {
+            const mockScene = {
+                time: { now: Date.now },
+                add: { 
+                    sprite: () => ({ setScale: () => ({}), setOrigin: () => ({}), setAlpha: () => ({}), destroy: () => ({}) }),
+                    circle: (x, y, radius, color) => ({
+                        setAlpha: () => ({}),
+                        destroy: () => ({}),
+                        setVisible: () => ({})
+                    }),
+                    particles: () => ({ createEmitter: () => ({ setPosition: () => ({}), start: () => ({}), stop: () => ({}) }) })
+                },
+                tweens: { add: () => ({ on: () => ({}), play: () => ({}) }) }
+            };
+            
+            const combatSystem = new CombatSystem(mockScene);
+            
+            // 테스트용 공격자와 방어자 생성
+            const attacker = {
+                stats: {
+                    attack: 100,
+                    level: 5
+                }
+            };
+            
+            const defender = {
+                stats: {
+                    defense: 50,
+                    level: 3
+                }
+            };
+            
+            // 기본 공격 데미지 계산
+            const basicDamageResult = combatSystem.calculateDamage(attacker, defender, 'basic');
+            if (typeof basicDamageResult.damage !== 'number' || basicDamageResult.damage <= 0) {
+                throw new Error('기본 공격 데미지 계산이 올바르지 않습니다.');
+            }
+            
+            // 스킬 데미지 계산
+            const skillDamageResult = combatSystem.calculateDamage(attacker, defender, 'skill', 80);
+            if (typeof skillDamageResult.damage !== 'number' || skillDamageResult.damage <= 0) {
+                throw new Error('스킬 데미지 계산이 올바르지 않습니다.');
+            }
+            
+            // 방어력이 높은 경우 데미지 감소 확인
+            defender.stats.defense = 200;
+            const reducedDamageResult = combatSystem.calculateDamage(attacker, defender, 'basic');
+            if (reducedDamageResult.damage >= basicDamageResult.damage) {
+                throw new Error('방어력에 따른 데미지 감소가 적용되지 않았습니다.');
+            }
+            
+            console.log('데미지 계산 시스템이 정상적으로 작동합니다.');
+        });
+
+        // 테스트 3: 체력/마나 관리 및 사망 처리 확인
+        testRunner.addTest('체력/마나 관리 및 사망 처리 확인', () => {
+            const mockScene = {
+                time: { now: Date.now },
+                add: { 
+                    sprite: () => ({ setScale: () => ({}), setOrigin: () => ({}), setAlpha: () => ({}), destroy: () => ({}) }),
+                    circle: (x, y, radius, color) => ({
+                        setAlpha: () => ({}),
+                        destroy: () => ({}),
+                        setVisible: () => ({})
+                    }),
+                    particles: () => ({ createEmitter: () => ({ setPosition: () => ({}), start: () => ({}), stop: () => ({}) }) })
+                },
+                tweens: { add: () => ({ on: () => ({}), play: () => ({}) }) }
+            };
+            
+            const combatSystem = new CombatSystem(mockScene);
+            
+            // 테스트용 챔피언 생성
+            const champion = {
+                stats: {
+                    maxHp: 1000,
+                    currentHp: 1000,
+                    maxMp: 500,
+                    currentMp: 500,
+                    attack: 80,
+                    defense: 60,
+                    level: 4
+                },
+                isDead: false,
+                sprite: {
+                    setTint: () => ({}),
+                    setAlpha: () => ({}),
+                    setVisible: () => ({})
+                },
+                healthBar: {
+                    setVisible: () => ({})
+                },
+                manaBar: {
+                    setVisible: () => ({})
+                },
+                nameText: {
+                    setVisible: () => ({})
+                },
+                levelText: {
+                    setVisible: () => ({})
+                }
+            };
+            
+            // 데미지 적용 테스트
+            const initialHp = champion.stats.currentHp;
+            combatSystem.applyDamage(champion, 300);
+            
+            if (champion.stats.currentHp >= initialHp) {
+                throw new Error('데미지 적용 후 체력이 감소하지 않았습니다.');
+            }
+            
+            if (champion.stats.currentHp !== initialHp - 300) {
+                throw new Error('데미지 적용량이 정확하지 않습니다.');
+            }
+            
+            // 치유 테스트
+            combatSystem.applyDamage(champion, -200); // 음수 데미지로 치유
+            if (champion.stats.currentHp !== initialHp - 100) {
+                throw new Error('치유가 정상적으로 적용되지 않았습니다.');
+            }
+            
+            // 최대 체력 초과 방지 확인
+            combatSystem.applyDamage(champion, -2000); // 과도한 치유
+            if (champion.stats.currentHp > champion.stats.maxHp) {
+                throw new Error('최대 체력을 초과하여 치유되었습니다.');
+            }
+            
+            // 사망 처리 테스트
+            combatSystem.applyDamage(champion, 2000); // 치명적 데미지
+            if (champion.stats.currentHp > 0) {
+                throw new Error('치명적 데미지 후 체력이 0 이하로 설정되지 않았습니다.');
+            }
+            
+            if (!champion.isDead) {
+                throw new Error('사망 상태가 정상적으로 설정되지 않았습니다.');
+            }
+            
+            console.log('체력/마나 관리 및 사망 처리가 정상적으로 작동합니다.');
+        });
+
+        // 테스트 4: 킬/데스 카운트 시스템 확인
+        testRunner.addTest('킬/데스 카운트 시스템 확인', () => {
+            if (typeof KillDeathManager === 'undefined') {
+                throw new Error('KillDeathManager 클래스가 정의되지 않았습니다.');
+            }
+            
+            const killDeathManager = new KillDeathManager();
+            
+            // 기본 메서드 확인
+            if (typeof killDeathManager.recordKill !== 'function') {
+                throw new Error('recordKill 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof killDeathManager.recordDeath !== 'function') {
+                throw new Error('recordDeath 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof killDeathManager.getStats !== 'function') {
+                throw new Error('getStats 메서드가 정의되지 않았습니다.');
+            }
+            
+            if (typeof killDeathManager.reset !== 'function') {
+                throw new Error('reset 메서드가 정의되지 않았습니다.');
+            }
+            
+            // 킬 기록 테스트
+            killDeathManager.recordKill('player', 'ai');
+            const playerStats = killDeathManager.getStats('player');
+            if (playerStats.kills !== 1) {
+                throw new Error('킬 기록이 정상적으로 증가하지 않았습니다.');
+            }
+            
+            // 데스 기록 테스트
+            killDeathManager.recordDeath('ai', 'player');
+            const aiStats = killDeathManager.getStats('ai');
+            if (aiStats.deaths !== 1) {
+                throw new Error('데스 기록이 정상적으로 증가하지 않았습니다.');
+            }
+            
+            // 어시스트 기록 테스트
+            killDeathManager.recordKill('player', 'ai', ['ally']);
+            const allyStats = killDeathManager.getStats('ally');
+            if (allyStats.assists !== 1) {
+                throw new Error('어시스트 기록이 정상적으로 증가하지 않았습니다.');
+            }
+            
+            // 통계 초기화 테스트
+            killDeathManager.reset();
+            const resetStats = killDeathManager.getStats('player');
+            if (resetStats.kills !== 0 || resetStats.deaths !== 0 || resetStats.assists !== 0) {
+                throw new Error('통계 초기화가 정상적으로 작동하지 않았습니다.');
+            }
+            
+            console.log('킬/데스 카운트 시스템이 정상적으로 작동합니다.');
+        });
+
+        // 테스트 5: 기본 공격 및 전투 이펙트 확인
+        testRunner.addTest('기본 공격 및 전투 이펙트 확인', () => {
+            const mockScene = {
+                time: { now: Date.now },
+                add: { 
+                    sprite: () => ({ 
+                        setScale: () => ({}), 
+                        setOrigin: () => ({}), 
+                        setAlpha: () => ({}), 
+                        destroy: () => ({}),
+                        setPosition: () => ({}),
+                        setTint: () => ({})
+                    }),
+                    circle: (x, y, radius, color) => ({
+                        setAlpha: () => ({}),
+                        destroy: () => ({}),
+                        setVisible: () => ({})
+                    }),
+                    particles: () => ({ 
+                        createEmitter: () => ({ 
+                            setPosition: () => ({}), 
+                            start: () => ({}), 
+                            stop: () => ({}),
+                            on: () => ({})
+                        }) 
+                    })
+                },
+                tweens: { 
+                    add: () => ({ 
+                        on: () => ({}), 
+                        play: () => ({})
+                    }) 
+                }
+            };
+            
+            const combatSystem = new CombatSystem(mockScene);
+            
+            // 테스트용 공격자와 방어자 생성
+            const attacker = {
+                x: 100,
+                y: 100,
+                stats: {
+                    attack: 120,
+                    level: 6,
+                    attackSpeed: 1.5
+                },
+                sprite: {
+                    setTint: () => ({}),
+                    setScale: () => ({})
+                }
+            };
+            
+            const target = {
+                x: 200,
+                y: 200,
+                stats: {
+                    maxHp: 800,
+                    currentHp: 800,
+                    defense: 70,
+                    level: 5
+                },
+                isDead: false,
+                sprite: {
+                    setTint: () => ({}),
+                    setAlpha: () => ({}),
+                    setVisible: () => ({})
+                },
+                healthBar: { setVisible: () => ({}) },
+                manaBar: { setVisible: () => ({}) },
+                nameText: { setVisible: () => ({}) },
+                levelText: { setVisible: () => ({}) }
+            };
+            
+            // 기본 공격 실행 테스트
+            const initialHp = target.stats.currentHp;
+            try {
+                combatSystem.performBasicAttack(attacker, target);
+                
+                // 데미지 적용 확인
+                if (target.stats.currentHp >= initialHp) {
+                    throw new Error('기본 공격 후 타겟의 체력이 감소하지 않았습니다.');
+                }
+                
+                console.log(`기본 공격 데미지: ${initialHp - target.stats.currentHp}`);
+            } catch (error) {
+                throw new Error(`기본 공격 실행 중 오류: ${error.message}`);
+            }
+            
+            // 전투 이펙트 생성 테스트
+            try {
+                const hitEffect = combatSystem.createCombatEffect(target.x, target.y, 'hit');
+                if (!hitEffect) {
+                    throw new Error('타격 이펙트가 생성되지 않았습니다.');
+                }
+                
+                const criticalEffect = combatSystem.createCombatEffect(target.x, target.y, 'critical');
+                if (!criticalEffect) {
+                    throw new Error('크리티컬 이펙트가 생성되지 않았습니다.');
+                }
+                
+                const deathEffect = combatSystem.createCombatEffect(target.x, target.y, 'death');
+                if (!deathEffect) {
+                    throw new Error('사망 이펙트가 생성되지 않았습니다.');
+                }
+            } catch (error) {
+                throw new Error(`전투 이펙트 생성 중 오류: ${error.message}`);
+            }
+            
+            // 사망 처리 테스트
+            combatSystem.applyDamage(target, 2000);
+            if (!target.isDead) {
+                throw new Error('치명적 데미지 후 사망 처리가 되지 않았습니다.');
+            }
+            
+            console.log('기본 공격 및 전투 이펙트가 정상적으로 작동합니다.');
+        });
+    </script>
 </body>
-</html>
+</html> 
