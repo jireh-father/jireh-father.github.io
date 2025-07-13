@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미니 장기 게임</title>
+    <!-- Phaser.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+        body {
+            background: linear-gradient(135deg, #f9d423 0%, #ff4e50 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Jua', 'Segoe UI', sans-serif;
+        }
+        h1 {
+            color: #fff;
+            text-shadow: 0 2px 12px #ff4e50cc;
+            margin-top: 2rem;
+            margin-bottom: 1.2rem;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+        #game-container {
+            box-shadow: 0 8px 32px rgba(255,78,80,0.18), 0 1.5px 8px rgba(0,0,0,0.08);
+            border-radius: 24px;
+            background: rgba(255,255,255,0.95);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        .info {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 1.2rem;
+            text-shadow: 0 1px 6px #ff4e50cc;
+        }
+        .mode-select {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .mode-btn {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 0.8rem 2rem;
+            color: #fff;
+            font-family: 'Jua', sans-serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(67,233,123,0.2);
+        }
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(67,233,123,0.3);
+        }
+        .mode-btn.ai {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+        }
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .game-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .game-overlay h2 {
+            color: #fff;
+            font-size: 3rem;
+            margin: 0 0 2rem 0;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+        .reset-btn {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 3rem;
+            color: #fff;
+            font-family: 'Jua', sans-serif;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(67,233,123,0.3);
+        }
+        .reset-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(67,233,123,0.4);
+        }
+    </style>
+</head>
+<body>
+    <h1>미니 장기 게임</h1>
+    <div class="mode-select">
+        <button class="mode-btn" onclick="startGame('pvp')">2인 대전</button>
+        <button class="mode-btn ai" onclick="startGame('pve')">AI 대전</button>
+    </div>
+    <div class="info">Phaser.js 기반 미니 장기 게임 (그래픽 효과 및 애니메이션 적용)</div>
+    <div id="game-container">
+        <div class="game-overlay">
+            <h2 id="winner-text"></h2>
+            <button class="reset-btn" onclick="restartCurrentGame()">다시하기</button>
+        </div>
+    </div>
+    <script>
+        const BOARD_COLS = 9;
+        const BOARD_ROWS = 10;
+        const CELL_SIZE = 54;
+        const BOARD_OFFSET_X = 30;
+        const BOARD_OFFSET_Y = 30;
+        const PIECE_LAYOUT = [
+            ['차', '마', '상', '사', '장', '사', '상', '마', '차'],
+            [null, '포', null, null, null, null, null, '포', null],
+            ['병', null, '병', null, '병', null, '병', null, '병'],
+            ...Array(4).fill(Array(9).fill(null)),
+            ['졸', null, '졸', null, '졸', null, '졸', null, '졸'],
+            [null, '炮', null, null, null, null, null, '炮', null],
+            ['車', '馬', '相', '仕', '帥', '仕', '相', '馬', '車']
+        ];
+        const PIECE_COLORS = { red: 0xff5252, blue: 0x448aff };
+        const PIECE_TEXT_COLORS = { red: '#fff', blue: '#fff' };
+
+        // 기물 이동 규칙
+        const PIECE_MOVES = {
+            '차': (row, col) => {
+                const moves = [];
+                // 상하좌우 직선 이동
+                for(let r=0; r<BOARD_ROWS; r++) moves.push([r, col]);
+                for(let c=0; c<BOARD_COLS; c++) moves.push([row, c]);
+                return moves;
+            },
+            '車': (row, col) => PIECE_MOVES['차'](row, col),
+            '마': (row, col) => {
+                return [
+                    [row-2, col-1], [row-2, col+1],
+                    [row+2, col-1], [row+2, col+1],
+                    [row-1, col-2], [row-1, col+2],
+                    [row+1, col-2], [row+1, col+2]
+                ].filter(([r,c]) => r>=0 && r<BOARD_ROWS && c>=0 && c<BOARD_COLS);
+            },
+            '馬': (row, col) => PIECE_MOVES['마'](row, col),
+            '상': (row, col) => {
+                return [
+                    [row-3, col-2], [row-3, col+2],
+                    [row+3, col-2], [row+3, col+2],
+                    [row-2, col-3], [row-2, col+3],
+                    [row+2, col-3], [row+2, col+3]
+                ].filter(([r,c]) => r>=0 && r<BOARD_ROWS && c>=0 && c<BOARD_COLS);
+            },
+            '相': (row, col) => PIECE_MOVES['상'](row, col),
+            '사': (row, col) => {
+                const isTop = row < 3;
+                const moves = [];
+                // 궁성 안에서 상하좌우 1칸
+                for(let dr of [-1,0,1]) {
+                    for(let dc of [-1,0,1]) {
+                        if(dr === 0 && dc === 0) continue;
+                        const r = row + dr;
+                        const c = col + dc;
+                        if(isTop && r >= 0 && r < 3 && c >= 3 && c < 6) moves.push([r,c]);
+                        if(!isTop && r >= 7 && r < 10 && c >= 3 && c < 6) moves.push([r,c]);
+                    }
+                }
+                return moves;
+            },
+            '仕': (row, col) => PIECE_MOVES['사'](row, col),
+            '장': (row, col) => PIECE_MOVES['사'](row, col),
+            '帥': (row, col) => PIECE_MOVES['사'](row, col),
+            '포': (row, col) => {
+                const moves = [];
+                // 상하좌우 직선 이동 (다른 기물을 넘어서 이동)
+                for(let r=0; r<BOARD_ROWS; r++) moves.push([r, col]);
+                for(let c=0; c<BOARD_COLS; c++) moves.push([row, c]);
+                return moves;
+            },
+            '炮': (row, col) => PIECE_MOVES['포'](row, col),
+            '병': (row, col) => {
+                return [[row+1, col], [row, col-1], [row, col+1]]
+                    .filter(([r,c]) => r>=0 && r<BOARD_ROWS && c>=0 && c<BOARD_COLS);
+            },
+            '졸': (row, col) => {
+                return [[row-1, col], [row, col-1], [row, col+1]]
+                    .filter(([r,c]) => r>=0 && r<BOARD_ROWS && c>=0 && c<BOARD_COLS);
+            }
+        };
+
+        // AI 관련 함수들
+        function getAllPossibleMoves(scene, team) {
+            const moves = [];
+            scene.pieces.filter(p => p.team === team).forEach(piece => {
+                const possibleMoves = PIECE_MOVES[piece.piece](piece.row, piece.col);
+                possibleMoves.forEach(([r, c]) => {
+                    const targetPiece = scene.pieces.find(p => p.row === r && p.col === c);
+                    if(piece.piece === '포' || piece.piece === '炮') {
+                        let jumpCount = 0;
+                        const dr = Math.sign(r - piece.row);
+                        const dc = Math.sign(c - piece.col);
+                        let cr = piece.row + dr;
+                        let cc = piece.col + dc;
+                        while(cr !== r || cc !== c) {
+                            if(scene.pieces.find(p=>p.row===cr&&p.col===cc)) jumpCount++;
+                            cr += dr;
+                            cc += dc;
+                        }
+                        if((jumpCount === 1 && !targetPiece) || (jumpCount === 2 && targetPiece && targetPiece.team !== team)) {
+                            moves.push({piece, to: [r, c], score: getScoreForMove(piece, targetPiece)});
+                        }
+                    } else if(!targetPiece || targetPiece.team !== team) {
+                        moves.push({piece, to: [r, c], score: getScoreForMove(piece, targetPiece)});
+                    }
+                });
+            });
+            return moves;
+        }
+
+        function getScoreForMove(piece, targetPiece) {
+            let score = 0;
+            // 공격 우선순위
+            if(targetPiece) {
+                if(targetPiece.piece === '장' || targetPiece.piece === '帥') score += 1000;
+                else if(targetPiece.piece === '차' || targetPiece.piece === '車') score += 50;
+                else if(targetPiece.piece === '마' || targetPiece.piece === '馬') score += 30;
+                else if(targetPiece.piece === '포' || targetPiece.piece === '炮') score += 40;
+                else score += 20;
+            }
+            // 중앙 선호
+            const centerScore = Math.abs(4 - piece.col) * -2;
+            score += centerScore;
+            return score;
+        }
+
+        function aiMove(scene) {
+            if(scene.gameOver) return;
+            const possibleMoves = getAllPossibleMoves(scene, 'blue');
+            if(possibleMoves.length === 0) return;
+            
+            // 점수가 높은 순으로 정렬
+            possibleMoves.sort((a, b) => b.score - a.score);
+            
+            // 상위 3개 중에서 랜덤 선택 (약간의 무작위성)
+            const topMoves = possibleMoves.slice(0, Math.min(3, possibleMoves.length));
+            const selectedMove = topMoves[Math.floor(Math.random() * topMoves.length)];
+            
+            // 선택된 이동 실행
+            setTimeout(() => {
+                selectPiece(scene, selectedMove.piece.row, selectedMove.piece.col);
+                setTimeout(() => {
+                    movePiece(scene, scene.selectedPiece, selectedMove.to[0], selectedMove.to[1]);
+                }, 500);
+            }, 1000);
+        }
+
+        let gameInstance = null;
+        let currentGameMode = 'pvp';
+        function restartCurrentGame() {
+            startGame(currentGameMode);
+            document.querySelector('.game-overlay').classList.remove('show');
+        }
+
+        function showGameOver(winner) {
+            document.querySelector('.game-overlay').classList.add('show');
+            document.getElementById('winner-text').textContent = `${winner} 승리!`;
+        }
+
+        function createParticles(scene, x, y, color) {
+            const particles = scene.add.particles(x, y, 'particle', {
+                speed: { min: 100, max: 200 },
+                angle: { min: 0, max: 360 },
+                scale: { start: 0.5, end: 0 },
+                blendMode: 'ADD',
+                lifespan: 1000,
+                gravityY: 300,
+                quantity: 20,
+                tint: color
+            });
+            scene.time.delayedCall(1000, () => particles.destroy());
+        }
+
+        // 기물 선택 함수
+        function selectPiece(scene, row, col) {
+            clearHighlights(scene);
+            const selected = scene.pieces.find(p=>p.row===row&&p.col===col);
+            if(!selected) return;
+            scene.selectedPiece = selected;
+            selected.token.setStrokeStyle(6, 0xfff176, 1);
+
+            // 이동 가능 위치 계산
+            const moves = PIECE_MOVES[selected.piece](row, col);
+            moves.forEach(([r,c]) => {
+                const targetPiece = scene.pieces.find(p=>p.row===r&&p.col===c);
+                // 포는 다른 기물을 넘어서 이동/공격
+                if(selected.piece === '포' || selected.piece === '炮') {
+                    let jumpCount = 0;
+                    const dr = Math.sign(r - row);
+                    const dc = Math.sign(c - col);
+                    let cr = row + dr;
+                    let cc = col + dc;
+                    while(cr !== r || cc !== c) {
+                        if(scene.pieces.find(p=>p.row===cr&&p.col===cc)) jumpCount++;
+                        cr += dr;
+                        cc += dc;
+                    }
+                    // 포는 한 개의 기물을 넘어서 이동하거나, 두 개의 기물을 넘어서 공격
+                    if((jumpCount === 1 && !targetPiece) || (jumpCount === 2 && targetPiece && targetPiece.team !== selected.team)) {
+                        addMoveHighlight(scene, r, c, !!targetPiece);
+                    }
+                }
+                // 다른 기물들은 직접 이동/공격
+                else if(!targetPiece || targetPiece.team !== selected.team) {
+                    addMoveHighlight(scene, r, c, !!targetPiece);
+                }
+            });
+        }
+
+        // 이동 가능 위치 하이라이트 추가
+        function addMoveHighlight(scene, row, col, isAttack) {
+            const hx = BOARD_OFFSET_X + col*CELL_SIZE + CELL_SIZE/2;
+            const hy = BOARD_OFFSET_Y + row*CELL_SIZE + CELL_SIZE/2;
+            const color = isAttack ? 0xff5252 : 0x00e676;
+            const highlight = scene.add.circle(hx, hy, CELL_SIZE*0.18, color, 0.45)
+                .setStrokeStyle(2, isAttack ? 0xe53935 : 0x00c853, 0.7)
+                .setInteractive({ useHandCursor: true });
+            highlight.on('pointerdown', function() {
+                movePiece(scene, scene.selectedPiece, row, col);
+            });
+            scene.moveHighlights.push(highlight);
+        }
+
+        // 하이라이트/선택 효과 해제
+        function clearHighlights(scene) {
+            scene.pieces.forEach(p=>p.token.setStrokeStyle(4, 0xffffff, 0.8));
+            scene.moveHighlights.forEach(h=>h.destroy());
+            scene.moveHighlights = [];
+        }
+
+        // 기물 이동 함수
+        function movePiece(scene, pieceObj, toRow, toCol) {
+            const targetPiece = scene.pieces.find(p=>p.row===toRow&&p.col===toCol);
+            if(targetPiece) {
+                const idx = scene.pieces.indexOf(targetPiece);
+                scene.pieces.splice(idx, 1);
+                // 잡힌 기물 파티클 효과
+                createParticles(scene, 
+                    BOARD_OFFSET_X + toCol*CELL_SIZE + CELL_SIZE/2,
+                    BOARD_OFFSET_Y + toRow*CELL_SIZE + CELL_SIZE/2,
+                    targetPiece.team === 'red' ? 0xff5252 : 0x448aff
+                );
+                scene.tweens.add({
+                    targets: [targetPiece.token, targetPiece.label],
+                    scale: 0,
+                    alpha: 0,
+                    duration: 200,
+                    onComplete: () => {
+                        targetPiece.token.destroy();
+                        targetPiece.label.destroy();
+                        if(targetPiece.piece === '장' || targetPiece.piece === '帥') {
+                            scene.gameOver = true;
+                            const winner = scene.currentTurn === 'red' ? '레드' : '블루';
+                            scene.turnText.setText(`${winner} 승리!`);
+                            showGameOver(winner);
+                        }
+                    }
+                });
+            }
+            pieceObj.row = toRow;
+            pieceObj.col = toCol;
+            const nx = BOARD_OFFSET_X + toCol*CELL_SIZE + CELL_SIZE/2;
+            const ny = BOARD_OFFSET_Y + toRow*CELL_SIZE + CELL_SIZE/2;
+            scene.tweens.add({ 
+                targets: [pieceObj.token, pieceObj.label],
+                x: nx,
+                y: ny,
+                duration: 220,
+                ease: 'Cubic.easeInOut',
+                onComplete: () => {
+                    // 이동 완료 파티클 효과
+                    createParticles(scene, nx, ny, pieceObj.team === 'red' ? 0xff9a9e : 0x90caf9);
+                }
+            });
+            clearHighlights(scene);
+            scene.selectedPiece = null;
+            if(!scene.gameOver) {
+                scene.currentTurn = scene.currentTurn === 'red' ? 'blue' : 'red';
+                scene.turnText.setText(`${scene.currentTurn === 'red' ? '레드' : '블루'} 턴`);
+                scene.turnText.setColor(scene.currentTurn === 'red' ? '#ff5252' : '#448aff');
+                
+                if(scene.gameMode === 'pve' && scene.currentTurn === 'blue') {
+                    aiMove(scene);
+                }
+            }
+        }
+
+        function startGame(mode) {
+            currentGameMode = mode;
+            if(gameInstance) gameInstance.destroy(true);
+            document.querySelector('.game-overlay').classList.remove('show');
+            
+            const config = {
+                type: Phaser.AUTO,
+                width: BOARD_COLS * CELL_SIZE + BOARD_OFFSET_X * 2,
+                height: BOARD_ROWS * CELL_SIZE + BOARD_OFFSET_Y * 2,
+                backgroundColor: '#f7e9c4',
+                parent: 'game-container',
+                scene: {
+                    preload: function() {
+                        // 파티클 이미지 생성
+                        const graphics = this.add.graphics();
+                        graphics.fillStyle(0xffffff);
+                        graphics.fillCircle(4, 4, 4);
+                        graphics.generateTexture('particle', 8, 8);
+                        graphics.destroy();
+                    },
+                    create: function() {
+                        const scene = this;
+                        scene.currentTurn = 'red';
+                        scene.gameOver = false;
+                        scene.gameMode = mode;
+
+                        // 보드 그리기
+                        const g = this.add.graphics();
+                        g.fillStyle(0xffffff, 1);
+                        g.fillRoundedRect(BOARD_OFFSET_X-10, BOARD_OFFSET_Y-10, CELL_SIZE*BOARD_COLS+20, CELL_SIZE*BOARD_ROWS+20, 24);
+                        g.fillGradientStyle(0xffe082, 0xffb300, 0xffb300, 0xffe082, 1);
+                        g.fillRect(BOARD_OFFSET_X, BOARD_OFFSET_Y, CELL_SIZE*BOARD_COLS, CELL_SIZE*BOARD_ROWS);
+                        g.lineStyle(3, 0x8d5524, 1);
+                        for(let i=0;i<=BOARD_ROWS;i++) {
+                            g.beginPath();
+                            g.moveTo(BOARD_OFFSET_X, BOARD_OFFSET_Y + i*CELL_SIZE);
+                            g.lineTo(BOARD_OFFSET_X + CELL_SIZE*BOARD_COLS, BOARD_OFFSET_Y + i*CELL_SIZE);
+                            g.strokePath();
+                        }
+                        for(let j=0;j<=BOARD_COLS;j++) {
+                            g.beginPath();
+                            g.moveTo(BOARD_OFFSET_X + j*CELL_SIZE, BOARD_OFFSET_Y);
+                            g.lineTo(BOARD_OFFSET_X + j*CELL_SIZE, BOARD_OFFSET_Y + CELL_SIZE*BOARD_ROWS);
+                            g.strokePath();
+                        }
+                        // 궁성 대각선
+                        g.lineStyle(2, 0x8d5524, 0.7);
+                        g.beginPath();
+                        g.moveTo(BOARD_OFFSET_X+3*CELL_SIZE, BOARD_OFFSET_Y);
+                        g.lineTo(BOARD_OFFSET_X+5*CELL_SIZE, BOARD_OFFSET_Y+2*CELL_SIZE);
+                        g.moveTo(BOARD_OFFSET_X+5*CELL_SIZE, BOARD_OFFSET_Y);
+                        g.lineTo(BOARD_OFFSET_X+3*CELL_SIZE, BOARD_OFFSET_Y+2*CELL_SIZE);
+                        g.strokePath();
+                        g.beginPath();
+                        g.moveTo(BOARD_OFFSET_X+3*CELL_SIZE, BOARD_OFFSET_Y+7*CELL_SIZE);
+                        g.lineTo(BOARD_OFFSET_X+5*CELL_SIZE, BOARD_OFFSET_Y+9*CELL_SIZE);
+                        g.moveTo(BOARD_OFFSET_X+5*CELL_SIZE, BOARD_OFFSET_Y+7*CELL_SIZE);
+                        g.lineTo(BOARD_OFFSET_X+3*CELL_SIZE, BOARD_OFFSET_Y+9*CELL_SIZE);
+                        g.strokePath();
+                        this.tweens.add({ targets: g, alpha: { from: 0.7, to: 1 }, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+                        // 턴 표시
+                        scene.turnText = this.add.text(config.width/2, 15, '레드 턴', {
+                            fontFamily: 'Jua',
+                            fontSize: '1.5rem',
+                            color: '#ff5252',
+                            align: 'center'
+                        }).setOrigin(0.5);
+
+                        // 기물 및 상태 관리
+                        scene.pieces = [];
+                        scene.selectedPiece = null;
+                        scene.moveHighlights = [];
+
+                        // 기물 배치
+                        for(let row=0;row<PIECE_LAYOUT.length;row++) {
+                            for(let col=0;col<PIECE_LAYOUT[row].length;col++) {
+                                const piece = PIECE_LAYOUT[row][col];
+                                if(piece) {
+                                    const team = row < 5 ? 'blue' : 'red';
+                                    let color = PIECE_COLORS[team];
+                                    let textColor = PIECE_TEXT_COLORS[team];
+                                    const cx = BOARD_OFFSET_X + col*CELL_SIZE + CELL_SIZE/2;
+                                    const cy = BOARD_OFFSET_Y + row*CELL_SIZE + CELL_SIZE/2;
+                                    // 그림자 효과를 위한 원 추가
+                                    this.add.circle(cx + 2, cy + 4, CELL_SIZE*0.38, 0x000000, 0.2);
+                                    const token = this.add.circle(cx, cy, CELL_SIZE*0.38, color, 0.92)
+                                        .setStrokeStyle(4, 0xffffff, 0.8)
+                                        .setInteractive({ useHandCursor: true });
+                                    const label = this.add.text(cx, cy, piece, {
+                                        fontFamily: 'Jua', fontSize: '1.5rem', color: textColor, align: 'center', stroke: '#fff', strokeThickness: 3,
+                                        shadow: { offsetX: 2, offsetY: 2, color: '#000', blur: 4, fill: true }
+                                    }).setOrigin(0.5);
+                                    this.tweens.add({ targets: token, scale: { from: 1, to: 1.12 }, duration: 1200 + Math.random()*400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut', delay: Math.random()*500 });
+                                    scene.pieces.push({row, col, piece, token, label, team});
+                                    token.on('pointerdown', function() {
+                                        if(!scene.gameOver && scene.currentTurn === team) selectPiece(scene, row, col);
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    update: function() {}
+                }
+            };
+            gameInstance = new Phaser.Game(config);
+        }
+
+        // 초기 게임 시작 (2인 대전 모드)
+        startGame('pvp');
+    </script>
+</body>
+</html> 
